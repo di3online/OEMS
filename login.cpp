@@ -2,7 +2,7 @@
  * @file login.cpp
  * @brief 
  * @author LaiSHZH
- * @version 1.0
+ * @version 1.1
  * @date 2012-04-08
  */
 #include "login.h"
@@ -21,8 +21,11 @@ using namespace std;
  * @param password
  *          The password will return
  */
-void handle_login(const string &rawtext, uid_t &userID, string &password)
+string handle_login(const string &rawtext)
 {
+    uid_t userID;
+    string password;
+
     size_t start = 0;
     size_t end = rawtext.find(' ');
     
@@ -40,7 +43,7 @@ void handle_login(const string &rawtext, uid_t &userID, string &password)
     
     password = rawtext.substr(start, end - start);
 
-    return ;
+    return login(userID, password);
 }
 
 

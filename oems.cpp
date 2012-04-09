@@ -24,16 +24,8 @@ int main(int argc, char *argv[])
     //cout << rawtext;
     //cout.flush();
 
-    uid_t userID;
-    string password;
-
-    handle_login(rawtext, userID, password);
+    string result = handle_login(rawtext);
     
-//    cerr << userID << endl
-//         << password << endl;
-
-    string result = login(userID, password);
-
     cout << result;
 
     cout.flush();
