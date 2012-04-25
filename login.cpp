@@ -5,12 +5,22 @@
  * @version 1.1
  * @date 2012-04-08
  */
+#include <ctime>
+#include <cstdlib>
+#include <cstring>
+#include <cmath>
+
 #include "login.h"
 #include "db.h"
 #include "xml.h"
 
+//Five hours
+const static unsigned int CONST_LOGIN_INTERVAL = 60 * 60 * 5;
+
 using namespace std;
 
+bool check_cookie(char *);
+char *generate_cookie(char *, size_t, char *);
 /**
  * @brief handle_login 
  *
@@ -21,7 +31,8 @@ using namespace std;
  * @param password
  *          The password will return
  */
-string handle_login(const string &rawtext)
+string 
+handle_login(const string &rawtext)
 {
     uid_t userID;
     string password;
@@ -39,7 +50,7 @@ string handle_login(const string &rawtext)
 
     //Get the password
     start = end + 1;
-    end = rawtext.find('\r', start);
+    end = rawtext.find_first_of(" \r\n", start);
     
     password = rawtext.substr(start, end - start);
 
@@ -98,7 +109,8 @@ login(const uid_t &userID, const string &password)
     snprintf(sql, sizeof(sql), "SELECT cookie FROM users WHERE user_id='%s' and password='%s'", cuid, cpasswd);
 
     //Exec the SQL query
-    PGresult *res = PQexec(conn, sql);
+    PGresult *res = NULL;
+    res = PQexec(conn, sql);
 
     if (PQresultStatus(res) != PGRES_TUPLES_OK)
     {//If exection failed
@@ -115,6 +127,33 @@ login(const uid_t &userID, const string &password)
     }
 
 
+    char *cookie = (char *) malloc(strlen(PQgetvalue(res, 0, 0)) + 1);
+
+    memmove(cookie, PQgetvalue(res, 0, 0), strlen(PQgetvalue(res, 0, 0)) + 1);
+
+    PQclear(res);
+
+    if (check_cookie(cookie))
+    {
+        //size of cookie
+        cookie = (char *) realloc(cookie, 100);
+        bool flag_update = true;
+        while ( flag_update )
+        {
+            generate_cookie(cookie, 100, cuid);
+
+            snprintf(sql , sizeof(sql), "UPDATE users SET cookie = '%s' WHERE user_id = '%s'", cookie, cuid);
+
+            res = PQexec(conn, sql);
+            if (PQresultStatus(res) == PGRES_COMMAND_OK)
+            {
+                flag_update = false;
+            }
+        }
+        PQclear(res);
+    }
+
+
     ret = "200 OK\r\n";
     ret += "\r\n";
 
@@ -126,7 +165,8 @@ login(const uid_t &userID, const string &password)
     root_node = xmlNewNode(NULL, BAD_CAST "LOGIN");
 
     xmlDocSetRootElement(doc, root_node);
-    node = xmlNewChild(root_node, NULL, BAD_CAST "cookie", BAD_CAST PQgetvalue(res, 0, 0));
+    node = xmlNewChild(root_node, NULL, BAD_CAST "cookie", 
+                        BAD_CAST cookie);
     
     xmlChar *xmlbuffer;
     int buffersize;
@@ -135,12 +175,55 @@ login(const uid_t &userID, const string &password)
 
     ret += (char *)xmlbuffer;
 
-    //Free the result of SQL
-    PQclear(res);
 
     xmlFree(xmlbuffer);
     xmlFreeDoc(doc);
 
+    free(cookie);
 
+    //Free the result of SQL
     return ret;
+}
+
+bool 
+check_cookie(char *cookie)
+{
+    time_t cur_time;
+    time(&cur_time);
+
+    time_t cookie_time;
+    char *pos = strchr(cookie, '-');
+
+    if (pos)
+    {
+        char *stop = NULL;
+        cookie_time = strtoul(cookie, &stop, 0);
+        if (stop < pos)
+        {
+            return true;
+        }
+
+        if (fabs(difftime(cur_time, cookie_time)) > CONST_LOGIN_INTERVAL)
+        {
+            return true;
+        }
+    } else {
+        return true;
+    }
+
+    return false;
+}
+
+char *
+generate_cookie(char *cookie, size_t size, char *cuid)
+{
+    time_t cur_time;
+    time(&cur_time);
+
+    srand(cur_time);
+    unsigned long random = rand() % 100000L;
+
+    snprintf(cookie, size, "%lu-%lu-%s", cur_time, random, cuid);
+
+    return cookie;
 }

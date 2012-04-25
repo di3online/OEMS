@@ -18,12 +18,10 @@ public:
     bool isConnected();
 
 private:
-
     static const char *conninfo;
-    static PGconn *conn;
-    static unsigned int count;
+    PGconn *conn;
 
-    static void closeConn();
+    void closeConn();
 };
 
 #endif //__INCLUDE_DB_
