@@ -9,10 +9,17 @@
 #include <semaphore.h>
 #define DBMAXCONNS 30
 
+//init in init_db() of mainloop.cpp
 struct DBConns{
+    
+    //Allow only one can change the following data
     sem_t mutex;
+    //Set how many connections can be used
     sem_t sem_conns;
+
+    //Number of connections
     int count;
+
     PGconn *conns[DBMAXCONNS];
     char used[DBMAXCONNS];
 };
