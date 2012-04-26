@@ -13,33 +13,31 @@
 int main()
 {
     int i;
-    for (i = 0; i < 5; i++)
+    for (i = 0; i < 5000; i++)
     {
     
-    int ret;
-    FILE *fin = fopen("login.in", "r");
-    assert(fin);
+        int ret;
+        FILE *fin = fopen("login.in", "r");
+        assert(fin);
 
-    int connfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        int connfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
-    assert(connfd != -1);
+        assert(connfd != -1);
 
-    struct sockaddr_in servaddr;
+        struct sockaddr_in servaddr;
 
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_port = htons(SERV_PORT);
-    ret = inet_pton(AF_INET, "127.0.0.1", &servaddr.sin_addr);
-    
-    assert(ret > 0);
+        servaddr.sin_family = AF_INET;
+        servaddr.sin_port = htons(SERV_PORT);
+        ret = inet_pton(AF_INET, "127.0.0.1", &servaddr.sin_addr);
+        
+        assert(ret > 0);
 
-    ret = connect(connfd, (const struct sockaddr *) &servaddr, sizeof(servaddr));
+        ret = connect(connfd, (const struct sockaddr *) &servaddr, sizeof(servaddr));
 
-    assert(ret >= 0);
+        assert(ret >= 0);
 
-    char buffer[1024];
-    char buf_size[MAXSIZELEN];
-    while (!feof(fin))
-    {
+        char buffer[1024];
+        char buf_size[MAXSIZELEN];
         memset(buf_size, 0, sizeof(buf_size));
         size_t len_read = fread(buffer, 1, sizeof(buffer), fin);
         snprintf(buf_size, sizeof(buf_size), "%lu", len_read);
@@ -52,10 +50,9 @@ int main()
         read(connfd, buffer, len_read);
 
         puts(buffer);
-    }
 
-    close(connfd);
-    fclose(fin);
+        close(connfd);
+        fclose(fin);
 
     }
     

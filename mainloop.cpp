@@ -9,6 +9,8 @@
 
 #include <semaphore.h>
 #include <sys/mman.h>
+#include <pthread.h>
+#include <signal.h>
 
 #include <string>
 #include <iostream>
@@ -25,10 +27,12 @@ using namespace std;
 
 const static int SERV_PORT = 8083;
 
+void *thr_start(void *arg);
+
 static void init_db();
 static string child_recv(int sockfd);
 static string child_distribute(string &request);
-static void child_send(int sockfd, string &data);
+static int child_send(int sockfd, string &data);
 
 int main()
 {
@@ -63,19 +67,34 @@ int main()
         perror("mainloop: listen failed");
     }
     
-    struct sockaddr_in cliaddr;
+    //struct sockaddr_in cliaddr;
     //socklen_t len;
     while (1)
     {
 
         //int connfd = accept(listen_fd, (struct sockaddr *) &cliaddr, &len);
+        
+        int *p_connfd = (int *) malloc(sizeof(int));
 
-        int connfd = accept(listen_fd, NULL, NULL);
+        *p_connfd = accept(listen_fd, NULL, NULL);
 
-        if (connfd < 0)
+        
+        if (*p_connfd < 0)
         {
             perror("mainloop: accept failed");
         }
+
+        pthread_t pthread_id;
+
+        ret = pthread_create(&pthread_id, NULL, thr_start, (void *) p_connfd);
+
+        if (ret != 0)
+        {
+            perror("pthread create failed");
+        }
+
+
+        /*
         if (fork() == 0)
         {
             
@@ -96,14 +115,35 @@ int main()
             
             exit(0);
 
-        }
-        //Close parent's connection fd, child will handle this.
-        close(connfd);
+        }*/
+
+
         
     }
 
     return 0;
 
+}
+
+void *
+thr_start(void *fd)
+{
+    int connfd = *(int *) fd;
+    int thr_ret = 0;
+    free(fd);
+
+    cerr << "Accept new client" << endl;
+    cerr.flush();
+
+
+    string str_body = child_recv(connfd);
+
+    string result = child_distribute(str_body);
+
+    thr_ret = child_send(connfd, result);
+
+    close(connfd);
+    return ((void *) 0);
 }
 
 static 
@@ -127,7 +167,6 @@ child_recv(int sockfd)
         {
             continue;
         } else if (cur_size <= 0) {
-            close(sockfd);
             request = "500 SOCKETREAD ERROR\r\n\r\n";
             cerr << "socket read fail" << endl;
             cerr.flush();
@@ -169,7 +208,7 @@ child_distribute(string &request)
 }
 
 static 
-void 
+int 
 child_send(int sockfd, string &data)
 {
     char buf_size[MAXSIZELEN];
@@ -196,9 +235,13 @@ child_send(int sockfd, string &data)
         len_start += len_write;
     }
 
-    close(sockfd);
+    if (len_write < 0)
+    {
+        return -1;
+    } else {
 
-    return ;
+        return 0;
+    }
 }
 
 static 

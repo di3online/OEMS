@@ -7,7 +7,7 @@
 #include <vector>
 
 #include <semaphore.h>
-#define DBMAXCONNS 30
+#define DBMAXCONNS 50
 
 //init in init_db() of mainloop.cpp
 struct DBConns{
