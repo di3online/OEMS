@@ -83,6 +83,7 @@ login(const uid_t &userID, const string &password)
     if (!db.isConnected())
     {
         ret = "500 System error\r\n\r\n";
+        ret += PQerrorMessage(conn);
         return ret;
     }
 
@@ -114,7 +115,8 @@ login(const uid_t &userID, const string &password)
 
     if (PQresultStatus(res) != PGRES_TUPLES_OK)
     {//If exection failed
-        ret = "500 System error\r\n\r\n";
+        ret = "501 System error\r\n\r\n";
+        ret += PQerrorMessage(conn);
         PQclear(res);
         return ret;
     }

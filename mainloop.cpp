@@ -7,10 +7,14 @@
 #include <arpa/inet.h>
 #include <errno.h>
 
+#include <semaphore.h>
+#include <sys/mman.h>
+
 #include <string>
 #include <iostream>
 
 #include "login.h"
+#include "db.h"
 
 #define LISTENQ 1024
 #define MAXADDR 20
@@ -21,12 +25,14 @@ using namespace std;
 
 const static int SERV_PORT = 8083;
 
+static void init_db();
 static string child_recv(int sockfd);
 static string child_distribute(string &request);
 static void child_send(int sockfd, string &data);
 
 int main()
 {
+    init_db();
     int ret = 0;
 
     int listen_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -191,6 +197,46 @@ child_send(int sockfd, string &data)
     }
 
     close(sockfd);
+
+    return ;
+}
+
+static 
+void 
+init_db()
+{
+    struct DBConns *ptr = 
+        (struct DBConns *) mmap(NULL, 
+                sizeof(struct DBConns), 
+                PROT_READ | PROT_WRITE, 
+                MAP_SHARED | MAP_ANON,
+                -1, 
+                0);
+    ptr->count = 0;
+    sem_init(&ptr->mutex, 1, 1);
+
+    DB::p_dbconns = ptr;
+
+    sem_wait(&ptr->mutex);
+
+    for (int i = 0; i < DB::MAX_CON; ++i)
+    {
+        int count = 0;
+        do {
+            ptr->conns[i] = PQconnectdb(DB::conninfo);
+            count++;
+        } while (ptr->conns[i] == NULL && count < 3);
+        if (count == 3)
+        {
+            break;
+        }
+
+        ptr->used[i] = 0;
+        ptr->count = i;
+    }
+
+    sem_init(&ptr->sem_conns, 1, ptr->count);
+    sem_post(&ptr->mutex);
 
     return ;
 }
