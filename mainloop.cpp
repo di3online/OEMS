@@ -30,7 +30,7 @@ const static int SERV_PORT = 8083;
 void *thr_start(void *arg);
 
 static void init_db();
-static string child_recv(int sockfd);
+static string child_recv(int sockfd, int *err);
 static string child_distribute(string &request);
 static int child_send(int sockfd, string &data);
 
@@ -128,6 +128,16 @@ int main()
 void *
 thr_start(void *fd)
 {
+/*
+    sigset_t signal_mask;
+    sigemptyset (&signal_mask);
+    sigaddset (&signal_mask, SIGPIPE);
+    int rc = pthread_sigmask (SIG_BLOCK, &signal_mask, NULL);
+    
+    if (rc != 0)
+    {
+            printf("block sigpipe error\n");
+    }*/
     int connfd = *(int *) fd;
     int thr_ret = 0;
     free(fd);
@@ -135,34 +145,65 @@ thr_start(void *fd)
     cerr << "Accept new client" << endl;
     cerr.flush();
 
+    while (!thr_ret)
+    {
 
-    string str_body = child_recv(connfd);
+        string str_body = child_recv(connfd, &thr_ret);
 
-    string result = child_distribute(str_body);
+        if (thr_ret != 0)
+        {
+            break;
+        }
+        string result = child_distribute(str_body);
 
-    thr_ret = child_send(connfd, result);
+        thr_ret = child_send(connfd, result);
+    }
 
     close(connfd);
+    
+    cerr << "client is gone" << endl;
+    cerr.flush();
     return ((void *) 0);
 }
 
 static 
 string 
-child_recv(int sockfd)
+child_recv(int sockfd, int *err)
 {
-    string request;
+    *err = 0;
+    string request = "";
     static char buffer[MAXBUF];
 
     int nread = read(sockfd, buffer, MAXSIZELEN);
     buffer[nread] = '\0';
 
+    char size[50];
+    snprintf(size, sizeof(size), "%d has been read on buffersize", nread);
+    cerr << size << endl;
+    cerr.flush();
+
+    if (nread == 0)
+    {
+        *err = 1;
+        return "";
+    }
+
     int size_to_read = atoi(buffer);
+
+    cerr << "buffer begin:" << endl;
+    cerr << buffer << endl;
+    cerr << "buffer end;" << endl;
+    cerr.flush();
 
     int cur_size = 0;
 
     while (size_to_read > 0)
     {
         cur_size = read(sockfd, buffer, MAXBUF - 1);
+        cerr << cur_size << " has been read" << endl;
+        cerr << buffer << endl;
+        cerr << "output stop" << endl;
+        cerr.flush();
         if (cur_size < 0 && errno == EINTR)
         {
             continue;
@@ -170,6 +211,7 @@ child_recv(int sockfd)
             request = "500 SOCKETREAD ERROR\r\n\r\n";
             cerr << "socket read fail" << endl;
             cerr.flush();
+            *err = 1;
             break;
         }
         
@@ -177,7 +219,14 @@ child_recv(int sockfd)
         request += buffer;
         size_to_read -= cur_size;
     }
-    
+    cerr << "out of read loop" << endl;
+    cerr.flush();
+/*
+    if (request == "")
+    {
+        *err = 1;
+    }
+*/
     return request;
 }
 
@@ -188,15 +237,15 @@ child_distribute(string &request)
     string result;
     size_t loc = request.find_first_of(" \r\n");
     string command = request.substr(0, loc);
-    cout << request << endl;
-    cout.flush();
+    //cout << request << endl;
+    //cout.flush();
 
     if (command == "LOGIN"){
         cout << "enter handle" << endl;
         cout.flush();
         result = handle_login(request);
-        cout << result << endl;
-        cout.flush();
+        //cout << result << endl;
+        //cout.flush();
     } else if (command == "500"){
         result = request;
     } else {
