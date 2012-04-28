@@ -10,33 +10,36 @@
 #define MAXSIZELEN 8
 
 #define SERV_PORT 8083
-int main()
+int main(int argc, char **argv)
 {
-    char read_buffer[1024];
-    char write_buffer[1024];
-    char buf_size[MAXSIZELEN];
-    char bufsize_read[MAXSIZELEN];
+    assert(argc == 3);
+    int times = atoi(argv[1]);
+    int all_times = atoi(argv[2]);;
+    char buffer_recv[1024];
+    char buffer_send[1024];
+    char bufrecv_size[MAXSIZELEN];
+    char bufsend_size[MAXSIZELEN];
+    size_t len_to_send;
     int ret;
     FILE *fin = fopen("login.in", "r");
     assert(fin);
 
     fseek(fin, 0L, SEEK_SET); 
-    size_t len_read = fread(read_buffer, 1, sizeof(read_buffer), fin);
+    len_to_send = fread(buffer_send, 1, sizeof(buffer_send), fin);
 
-    size_t len_send = len_read;
+    fclose(fin);
 
-    memset(bufsize_read, 0, sizeof(bufsize_read));
-    snprintf(bufsize_read, sizeof(bufsize_read), "%lu", len_read);
+    memset(bufsend_size, 0, sizeof(bufsend_size));
+    snprintf(bufsend_size, sizeof(bufsend_size), "%lu", len_to_send);
 
 
 
     int count = 0;
-    int times = 5;
     printf("%d \n", 500 / times);
     fflush(stdout);
     int i;
     int child_count = 0;
-    for (i = 0; i < 5000 / times; i++)
+    for (i = 0; i < all_times / times; i++)
     {
         printf("child : %d\n", child_count++);
         fflush(stdout);
@@ -65,14 +68,32 @@ int main()
                 printf("%d:\n", count); 
 
                 count++;
-                write(connfd, bufsize_read, sizeof(bufsize_read));
-                size_t len_write = write(connfd, read_buffer, len_send);
-                printf("write %lu\n", len_write);
+                size_t len_write;
+                len_write = write(connfd, bufsend_size, sizeof(bufsend_size));
+                printf("write %lu on bufsend_size\n", len_write);
+                len_write = write(connfd, buffer_send, len_to_send);
+                printf("write %ld\n", len_write);
 
-                read(connfd, buf_size, sizeof(buf_size));
-                len_read = atoi(buf_size);
 
-                read(connfd, write_buffer, len_read);
+                size_t len_recv;
+                len_recv = read(connfd, bufrecv_size, sizeof(bufrecv_size));
+                printf("read %lu on bufrecv_size\nsize: %s\n", len_recv, bufrecv_size);
+
+                int len_to_recv = atoi(bufrecv_size);
+
+                buffer_recv[0] = '\0';
+
+                len_recv = read(connfd, buffer_recv, len_to_recv);
+
+                if (buffer_recv[0] == '2' && buffer_recv[1] == '0' && buffer_recv[2] == '0')
+                {
+                    printf("read good\n");
+                } else {
+                    printf("read bad\n");
+                }
+                printf("read %lu on body\n", len_recv);
+                printf("%s\n", buffer_recv);
+                fflush(stdout);
 
                 //puts(write_buffer);
             }
@@ -83,6 +104,5 @@ int main()
 
     }
     
-    fclose(fin);
     return 0;
 }

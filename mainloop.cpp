@@ -21,6 +21,9 @@
 #define LISTENQ 1024
 #define MAXADDR 20
 #define MAXBUF 4048
+
+//Client should send the size of packet first, 
+//and server will expect the packet according to the size.
 #define MAXSIZELEN 8
 
 using namespace std;
@@ -31,8 +34,8 @@ void *thr_start(void *arg);
 
 static void init_db();
 static string child_recv(int sockfd, int *err);
-static string child_distribute(string &request);
-static int child_send(int sockfd, string &data);
+static string child_distribute(const string &request);
+static int child_send(int sockfd, const string &data);
 
 int main()
 {
@@ -174,21 +177,37 @@ child_recv(int sockfd, int *err)
     string request = "";
     static char buffer[MAXBUF];
 
-    int nread = read(sockfd, buffer, MAXSIZELEN);
-    buffer[nread] = '\0';
+    size_t nread = MAXSIZELEN;
+    size_t size_to_read = MAXSIZELEN;
+    while (size_to_read > 0)
+    {
+        nread = read(sockfd, 
+                buffer + MAXSIZELEN - size_to_read, 
+                size_to_read);
+        if (nread < 0 && errno == EINTR)
+        {
+            continue;
+        } else if (nread <= 0) {
+            break;
+        }
+        size_to_read -= nread;
+    }
+    buffer[MAXSIZELEN] = '\0';
 
-    char size[50];
-    snprintf(size, sizeof(size), "%d has been read on buffersize", nread);
+    char size[MAXSIZELEN];
+    snprintf(size, sizeof(size), 
+            "%lu has been read on buffersize", 
+            MAXSIZELEN - size_to_read);
     cerr << size << endl;
     cerr.flush();
 
-    if (nread == 0)
+    if (nread <= 0)
     {
         *err = 1;
         return "";
     }
 
-    int size_to_read = atoi(buffer);
+    size_to_read = atoi(buffer);
 
     cerr << "buffer begin:" << endl;
     cerr << buffer << endl;
@@ -199,7 +218,7 @@ child_recv(int sockfd, int *err)
 
     while (size_to_read > 0)
     {
-        cur_size = read(sockfd, buffer, MAXBUF - 1);
+        cur_size = read(sockfd, buffer, size_to_read);
         cerr << cur_size << " has been read" << endl;
         cerr << buffer << endl;
         cerr << "output stop" << endl;
@@ -232,7 +251,7 @@ child_recv(int sockfd, int *err)
 
 static 
 string 
-child_distribute(string &request)
+child_distribute(const string &request)
 {
     string result;
     size_t loc = request.find_first_of(" \r\n");
@@ -240,7 +259,7 @@ child_distribute(string &request)
     //cout << request << endl;
     //cout.flush();
 
-    if (command == "LOGIN"){
+    if (command.find("LOGIN") != string::npos){
         cout << "enter handle" << endl;
         cout.flush();
         result = handle_login(request);
@@ -250,7 +269,9 @@ child_distribute(string &request)
         result = request;
     } else {
         result = "500 DISTRUBUTE COMMAND NOT FOUND\r\n\r\n";
-        cout << result << endl;
+        cerr << request << endl
+            << result << endl;
+        cerr.flush();
     }
 
     return result;
@@ -258,27 +279,35 @@ child_distribute(string &request)
 
 static 
 int 
-child_send(int sockfd, string &data)
+child_send(int sockfd,const string &data)
 {
+    size_t size = data.size();
     char buf_size[MAXSIZELEN];
-    snprintf(buf_size, sizeof(buf_size), "%lu", data.size() + 1);
+    char buffer[MAXBUF];
+    memmove(buffer, data.c_str(), size);
+    buffer[size] = '\0';
+
+    snprintf(buf_size, sizeof(buf_size), "%lu", size + 1);
     write(sockfd, buf_size, sizeof(buf_size));
+
+    cerr << size + 1 << ":" << buf_size << endl 
+        << buffer << endl;
+    cerr.flush();
 
 
     size_t len_write;
     size_t len_start = 0;
-    while ( len_start < data.size() + 1)
+    while ( len_start < size + 1)
     {
         len_write = write(sockfd, 
-                data.c_str() + len_start, data.size() + 1);
+                buffer + len_start, size + 1 - len_start);
         if (len_write < 0)
         {
             if (errno == EINTR)
             {
                 continue ;
             }
-            close(sockfd);
-            perror("mainloop: write fail");
+            //perror("mainloop: write fail");
             break;
         }
         len_start += len_write;
@@ -311,7 +340,7 @@ init_db()
 
     sem_wait(&ptr->mutex);
 
-    for (int i = 0; i < DB::MAX_CON; ++i)
+    for (unsigned int i = 0; i < DB::MAX_CON; ++i)
     {
         int count = 0;
         do {
