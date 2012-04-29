@@ -93,7 +93,8 @@ int main()
 
         if (ret != 0)
         {
-            perror("pthread create failed");
+            cerr << "pthread create failed" << endl;
+            cerr.flush();
         }
 
 
@@ -240,12 +241,7 @@ child_recv(int sockfd, int *err)
     }
     cerr << "out of read loop" << endl;
     cerr.flush();
-/*
-    if (request == "")
-    {
-        *err = 1;
-    }
-*/
+
     return request;
 }
 

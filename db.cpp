@@ -46,13 +46,3 @@ PGconn *DB::getConn()
     return conn;
 }
 
-bool DB::isConnected()
-{
-    return (PQstatus(conn) == CONNECTION_OK);
-}
-
-void DB::closeConns()
-{
-
-    return ;
-}

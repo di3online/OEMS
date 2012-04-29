@@ -34,6 +34,7 @@ char *generate_cookie(char *, size_t, char *);
 string 
 handle_login(const string &rawtext)
 {
+    
     uid_t userID;
     string password;
 
@@ -45,16 +46,54 @@ handle_login(const string &rawtext)
     //Get the userID
     start = end + 1;
     end = rawtext.find(' ', start);
-
     userID = rawtext.substr(start, end - start);
 
     //Get the password
     start = end + 1;
     end = rawtext.find_first_of(" \r\n", start);
-    
     password = rawtext.substr(start, end - start);
 
-    return login(userID, password);
+    int err;
+    //Init the db connection 
+    DB db;
+    string cookie = login(userID, password, err, db.getConn());
+    
+    string response;
+
+    //Check the return code of the function
+    if (err != SUCCESSFUL)
+    {
+        response = sys_error(err);
+        return response;
+    }
+
+    response = sys_error(SUCCESSFUL);
+    response += "\r\n\r\n";
+
+    //Generate the XML body
+    xmlDocPtr doc = NULL;
+    xmlNodePtr root_node = NULL;
+
+    doc = xmlNewDoc(BAD_CAST "1.0");
+    root_node = xmlNewNode(NULL, BAD_CAST "LOGIN");
+
+    xmlDocSetRootElement(doc, root_node);
+    xmlNewChild(root_node, NULL, BAD_CAST "cookie", 
+                        BAD_CAST cookie.c_str());
+    
+    xmlChar *xmlbuffer;
+    int buffersize;
+
+    xmlDocDumpFormatMemory(doc, &xmlbuffer, &buffersize, 1);
+
+    response += (char *)xmlbuffer;
+
+
+    xmlFree(xmlbuffer);
+    xmlFreeDoc(doc);
+
+    return response;
+
 }
 
 
@@ -66,36 +105,43 @@ handle_login(const string &rawtext)
  *          User's ID which will be checked
  * @param password
  *          User's password will be checked
+ * @param err
+ *          return the status of the function progress
+ * @param dbconn
+ *          the connection to database which is created in 
+ *          the caller.
  *
  * @return 
- *          The string which contain Cookie 
- *          if userID and password is correct
+ *          Cookie of the user if user id match the password.
  */
 
 string 
-login(const uid_t &userID, const string &password)
+login(const uid_t &userID, const string &password, int &err, PGconn *dbconn)
 {
-    DB db;
-    PGconn *conn = db.getConn();
+
+    err = SUCCESSFUL;
+    PGconn *conn = dbconn;
 
     string ret;
     
-    if (!db.isConnected())
+    if (PQstatus(conn) != CONNECTION_OK)
     {
-        ret = "500 System error\r\n\r\n";
-        ret += PQerrorMessage(conn);
+        ret = "";
+        err = DBERROR;
         return ret;
     }
 
     if (userID.size() > MAXLEN_USERID)
     {
-        ret = "500 userID is too long\r\n\r\n";
+        err = INPUTFORMATERROR;
+        ret = "";
         return ret;
     }
 
     if (password.size() > MAXLEN_PASSWORD)
     {
-        ret = "500 password is too long\r\n\r\n";
+        err = INPUTFORMATERROR;
+        ret = "";
         return ret;
     }
 
@@ -115,15 +161,16 @@ login(const uid_t &userID, const string &password)
 
     if (PQresultStatus(res) != PGRES_TUPLES_OK)
     {//If exection failed
-        ret = "501 System error\r\n\r\n";
-        ret += PQerrorMessage(conn);
+        err = DBERROR;
+        ret = "";
         PQclear(res);
         return ret;
     }
 
     if (PQntuples(res) == 0)
     {//If userID doesn't match password
-        ret = "403 MISMATCH\r\n\r\n";
+        err = MISTATCH;
+        ret = "";
         PQclear(res);
         return ret;
     }
@@ -138,7 +185,7 @@ login(const uid_t &userID, const string &password)
     if (check_cookie(cookie))
     {
         //size of cookie
-        cookie = (char *) realloc(cookie, 100);
+        cookie = (char *) realloc(cookie, MAXLEN_COOKIE);
         bool flag_update = true;
         while ( flag_update )
         {
@@ -156,34 +203,10 @@ login(const uid_t &userID, const string &password)
     }
 
 
-    ret = "200 OK\r\n";
-    ret += "\r\n";
-
-    //Generate the XML body
-    xmlDocPtr doc = NULL;
-    xmlNodePtr root_node = NULL, node = NULL;
-
-    doc = xmlNewDoc(BAD_CAST "1.0");
-    root_node = xmlNewNode(NULL, BAD_CAST "LOGIN");
-
-    xmlDocSetRootElement(doc, root_node);
-    node = xmlNewChild(root_node, NULL, BAD_CAST "cookie", 
-                        BAD_CAST cookie);
-    
-    xmlChar *xmlbuffer;
-    int buffersize;
-
-    xmlDocDumpFormatMemory(doc, &xmlbuffer, &buffersize, 1);
-
-    ret += (char *)xmlbuffer;
-
-
-    xmlFree(xmlbuffer);
-    xmlFreeDoc(doc);
+    err = SUCCESSFUL;
+    ret = cookie;
 
     free(cookie);
-
-    //Free the result of SQL
     return ret;
 }
 
