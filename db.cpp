@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-const char *DB::conninfo = "host=127.0.0.1 user=postgres dbname=oes_db password=dbpost";
+const char *DB::conninfo = "host=127.0.0.1 user=postgres dbname=oes_db password=dbpgsql";
 
 struct DBConns *DB::p_dbconns = NULL;
 

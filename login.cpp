@@ -10,12 +10,15 @@
 #include <cstring>
 #include <cmath>
 
-#include "login.h"
+#include "common.h"
 #include "db.h"
 #include "xml.h"
+#include "login.h"
+#include "getGIDByUID.h"
+
 
 //Five hours
-const static unsigned int CONST_LOGIN_INTERVAL = 60 * 60 * 5;
+const static unsigned int CONST_LOGIN_INTERVAL = 60;// * 60 * 12;
 
 using namespace std;
 
@@ -34,6 +37,8 @@ char *generate_cookie(char *, size_t, char *);
 string 
 handle_login(const string &rawtext)
 {
+    string response;
+
     
     uid_t userID;
     string password;
@@ -56,18 +61,46 @@ handle_login(const string &rawtext)
     int err;
     //Init the db connection 
     DB db;
+    PGresult *dbres = PQexec(db.getConn(), "BEGIN");
+
+    if (PQresultStatus(dbres) != PGRES_COMMAND_OK)
+    {
+        response = sys_error(PC_DBERROR);
+        PQclear(dbres);
+        return response;
+    }
+    PQclear(dbres);
+
     string cookie = login(userID, password, err, db.getConn());
     
-    string response;
-
     //Check the return code of the function
-    if (err != SUCCESSFUL)
+    if (err != PC_SUCCESSFUL)
     {
         response = sys_error(err);
+        PQexec(db.getConn(), "ROLLBACK");
         return response;
     }
 
-    response = sys_error(SUCCESSFUL);
+    gid_t gid = getGIDByUID(userID, err, db.getConn());
+
+    const char *group = echo_gid(gid);
+
+    if (err != PC_SUCCESSFUL)
+    {
+        response = sys_error(err);
+        PQexec(db.getConn(), "ROLLBACK");
+        return response;
+    }
+
+    dbres = PQexec(db.getConn(), "COMMIT");
+    if (PQresultStatus(dbres) != PGRES_COMMAND_OK)
+    {
+        response = sys_error(PC_DBERROR);
+        PQexec(db.getConn(), "ROLLBACK");
+        return response;
+    }
+
+    response = sys_error(PC_SUCCESSFUL);
     response += "\r\n\r\n";
 
     //Generate the XML body
@@ -75,12 +108,16 @@ handle_login(const string &rawtext)
     xmlNodePtr root_node = NULL;
 
     doc = xmlNewDoc(BAD_CAST "1.0");
-    root_node = xmlNewNode(NULL, BAD_CAST "LOGIN");
+    root_node = xmlNewNode(NULL, BAD_CAST "login");
 
     xmlDocSetRootElement(doc, root_node);
+    xmlNewChild(root_node, NULL, BAD_CAST "gid", 
+                        BAD_CAST group);
+    
     xmlNewChild(root_node, NULL, BAD_CAST "cookie", 
                         BAD_CAST cookie.c_str());
-    
+
+
     xmlChar *xmlbuffer;
     int buffersize;
 
@@ -112,14 +149,14 @@ handle_login(const string &rawtext)
  *          the caller.
  *
  * @return 
- *          Cookie of the user if user id match the password.
+ *          Cookie and group of the user if user id matches its password.
  */
 
 string 
 login(const uid_t &userID, const string &password, int &err, PGconn *dbconn)
 {
 
-    err = SUCCESSFUL;
+    err = PC_UNKNOWNERROR;
     PGconn *conn = dbconn;
 
     string ret;
@@ -127,20 +164,20 @@ login(const uid_t &userID, const string &password, int &err, PGconn *dbconn)
     if (PQstatus(conn) != CONNECTION_OK)
     {
         ret = "";
-        err = DBERROR;
+        err = PC_DBERROR;
         return ret;
     }
 
     if (userID.size() > MAXLEN_USERID)
     {
-        err = INPUTFORMATERROR;
+        err = PC_INPUTFORMATERROR;
         ret = "";
         return ret;
     }
 
     if (password.size() > MAXLEN_PASSWORD)
     {
-        err = INPUTFORMATERROR;
+        err = PC_INPUTFORMATERROR;
         ret = "";
         return ret;
     }
@@ -153,7 +190,9 @@ login(const uid_t &userID, const string &password, int &err, PGconn *dbconn)
     PQescapeString(cpasswd, password.c_str(), password.size());
 
     char sql[300];
-    snprintf(sql, sizeof(sql), "SELECT cookie FROM users WHERE user_id='%s' and password='%s'", cuid, cpasswd);
+    snprintf(sql, sizeof(sql), 
+            "SELECT cookie, group_id FROM users WHERE user_id='%s' and password='%s'", 
+            cuid, cpasswd);
 
     //Exec the SQL query
     PGresult *res = NULL;
@@ -161,7 +200,7 @@ login(const uid_t &userID, const string &password, int &err, PGconn *dbconn)
 
     if (PQresultStatus(res) != PGRES_TUPLES_OK)
     {//If exection failed
-        err = DBERROR;
+        err = PC_DBERROR;
         ret = "";
         PQclear(res);
         return ret;
@@ -169,7 +208,7 @@ login(const uid_t &userID, const string &password, int &err, PGconn *dbconn)
 
     if (PQntuples(res) == 0)
     {//If userID doesn't match password
-        err = MISTATCH;
+        err = PC_MISTATCH;
         ret = "";
         PQclear(res);
         return ret;
@@ -191,19 +230,21 @@ login(const uid_t &userID, const string &password, int &err, PGconn *dbconn)
         {
             generate_cookie(cookie, 100, cuid);
 
-            snprintf(sql , sizeof(sql), "UPDATE users SET cookie = '%s' WHERE user_id = '%s'", cookie, cuid);
+            snprintf(sql , sizeof(sql), "UPDATE users SET cookie = '%s' WHERE user_id = '%s' RETURNING cookie", cookie, cuid);
 
             res = PQexec(conn, sql);
-            if (PQresultStatus(res) == PGRES_COMMAND_OK)
+            if (PQresultStatus(res) == PGRES_TUPLES_OK)
             {
                 flag_update = false;
+                memcpy(cookie, PQgetvalue(res, 0, 0), strlen(PQgetvalue(res, 0, 0)) + 1);
             }
+            
         }
         PQclear(res);
     }
 
 
-    err = SUCCESSFUL;
+    err = PC_SUCCESSFUL;
     ret = cookie;
 
     free(cookie);

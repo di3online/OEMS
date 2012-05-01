@@ -15,12 +15,12 @@
 #include <string>
 #include <iostream>
 
-#include "login.h"
 #include "db.h"
+#include "common.h"
+#include "handlers.h"
 
 #define LISTENQ 1024
 #define MAXADDR 20
-#define MAXBUF 4048
 
 //Client should send the size of packet first, 
 //and server will expect the packet according to the size.
@@ -132,7 +132,7 @@ int main()
 void *
 thr_start(void *fd)
 {
-/*
+
     sigset_t signal_mask;
     sigemptyset (&signal_mask);
     sigaddset (&signal_mask, SIGPIPE);
@@ -141,7 +141,7 @@ thr_start(void *fd)
     if (rc != 0)
     {
             printf("block sigpipe error\n");
-    }*/
+    }
     int connfd = *(int *) fd;
     int thr_ret = 0;
     free(fd);
@@ -167,7 +167,7 @@ thr_start(void *fd)
     
     cerr << "client is gone" << endl;
     cerr.flush();
-    return ((void *) 0);
+    pthread_exit((void *) 0);
 }
 
 static 
@@ -261,8 +261,12 @@ child_distribute(const string &request)
         result = handle_login(request);
         //cout << result << endl;
         //cout.flush();
-    } else if (command == "500"){
-        result = request;
+
+    } else if (command.find("LSTET") != string::npos){
+        cout << "enter LSTET" << endl;
+        cout.flush();
+
+        result = handle_LSTET(request);
     } else {
         result = "500 DISTRUBUTE COMMAND NOT FOUND\r\n\r\n";
         cerr << request << endl

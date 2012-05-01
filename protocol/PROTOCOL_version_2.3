@@ -1,0 +1,510 @@
+OEMS Protocol version 2.2
+[CL]="\r\n"
+/*
+ *Modified EINF(Require adjustment to database)
+ *Add MPSTA(Modify paper status to "Y")
+ *Add student module instructions
+ *Add some necessary comments
+ */
+
+OEMS Protocol version 2.3
+/*
+ *Modify LSTQ(add tag description)
+ */
+--------------------------------------------------------------------------
+//User Module
+--------------------------------------------------------------------------
+1.
+LOGIN uid pwd[CL]
+[CL]
+
+Return:
+200 OK[CL]
+[CL]
+<?xml version="1.0"?>
+<LOGIN>
+<gid></gid>
+<cookie></cookie>
+</LOGIN>
+
+403 MISMATCH[CL]
+[CL]
+
+2.
+USRINF uid[CL]
+Cookie: value[CL]
+[CL]
+
+Return:
+200 OK[CL]
+[CL]
+<?xml version="1.0"?>
+<USRINF>
+<uid></uid>
+<name></name>
+<email></email>
+<phone></phone>
+</USRINF>
+
+404 NOTFOUND[CL]
+[CL]
+
+3.
+MUSRINF uid[CL]
+Cookie: value[CL]
+[CL]
+<?xml version="1.0"?>
+<MUSRINF>
+<email></email>
+<phone></phone>
+</MUSRINF>
+
+Return:
+200 OK[CL]
+[CL]
+
+400 NOPERMISSION[CL]
+[CL]
+
+404 NOTFOUND[CL]
+[CL]
+
+4.
+PWDCHG uid[CL]
+Cookie: value[CL]
+[CL]
+<?xml version="1.0"?>
+<PWDCHG>
+<old></old>
+<new></new>
+</PWDCHG>
+
+Return:
+200 OK[CL]
+[CL]
+
+400 NOPERMISSION[CL]
+[CL]
+
+404 NOTFOUND[CL]
+[CL]
+
+--------------------------------------------------------------------
+//Teacher module
+--------------------------------------------------------------------
+5.
+LSTET[CL]
+Cookie: value[CL]
+[CL]
+
+Return:
+200 OK[CL]
+[CL]
+<?xml version="1.0"?>
+<LSTET>
+<exam>			//The number of exams is equal to or above zero
+<eid></eid>
+<name></name>
+<course></course>
+<stime></stime>
+<etime></etime>
+<accomplishment>value</accomplishment>	//If all three papers is finished, value="YES", Else value="NO"
+<management>value</management>		//Value=online or offline
+<status>value</status>			//Value=closed or started
+</exam>
+</LSTET>
+
+400 NOPERMISSION[CL]
+[CL]
+
+6.
+EINF eid[CL]
+Cookie: value[CL]
+[CL]
+
+Return:
+200 OK[CL]
+[CL]
+<EINF>
+<name></name>
+<course></course>
+<stime></stime>
+<etime></etime>
+<paper>
+<pid></pid>
+<status></status>	//Value is Y or N, represent the paper is finished or not; The initial status of paper is "N"
+</paper>
+<paper>
+<pid></pid>
+<status></status>
+</paper>
+<paper>
+<pid></pid>
+<status></status>
+</paper>
+</EINF>
+
+400 NOPERMISSION[CL]
+[CL]
+
+404 NOTFOUND[CL]
+[CL]
+
+7.
+MEINF eid[CL]
+Cookie: value[CL]
+[CL]
+<?xml version="1.0"?>
+<MEINF>
+<name></name>
+<course></course>
+<stime></stime>
+<etime></etime>
+<accomplishment></accomplishment>
+<management></management>
+<status></status>
+</MEINF>
+
+Return:
+200 OK[CL]
+[CL]
+
+400 NOPERMISSION[CL]
+[CL]
+
+404 NOTFOUND[CL]
+[CL]
+
+8.
+ADDE[CL]
+Cookie: value[CL]
+[CL]
+<?xml version="1.0"?>
+<ADDE>
+<name></name>
+<course></course>
+<stime></stime>
+<etime></etime>
+</ADDE>
+
+Return:
+200 OK[CL]
+[CL]
+
+400 NOPERMISSION[CL]
+[CL]
+
+9.
+DELE eid[CL]
+Cookie: value[CL]
+[CL]
+
+Return:
+200 OK[CL]
+[CL]
+
+400 NOPERMISSION[CL]
+[CL]
+
+404 NOTFOUND[CL]
+[CL]
+
+10.
+ADDQ[CL]
+Cookie: value[CL]
+[CL]
+<?xml version="1.0"?>
+<ADDQ>
+<description></description>
+<choice></choice>		//The number of choices is either 2 or 4
+<key></key>			//key=1, 2, 3, 4, corresponding the position of the right answer in XML
+<time></time>
+</ADDQ>
+
+Return:
+200 OK[CL]
+[CL]
+
+400 NOPERMISSION[CL]
+[CL]
+
+11.
+DELQ qid[CL]
+Cookie: value[CL]
+[CL]
+
+Return:
+200 OK[CL]
+[CL]
+
+400 NOPERMISSION[CL]
+[CL]
+
+404 NOTFOUND[CL]
+[CL]
+
+12.
+MQINF qid[CL]
+Cookie: value[CL]
+[CL]
+<?xml version="1.0"?>
+<MQINF>
+<description></description>
+<choice></choice>		//The number of choices is either 2 or 4
+<key></key>
+<time></time>
+</MQINF>
+
+Return:
+200 OK[CL]
+[CL]
+
+400 NOPERMISSION[CL]
+[CL]
+
+404 NOTFOUND[CL]
+[CL]
+
+13.
+LSTQ pid[CL]
+Cookie: value[CL]
+[CL]
+
+Return:
+200 OK[CL]
+[CL]
+<?xml version="1.0"?>
+<LSTQ>
+<question>		//The number of questions is equal to or above zero
+<qid></qid>
+<description></description>
+<choice></choice>	//The number of choice is either 2 or 4
+<key></key>		//key=1, 2, 3, 4, corresponding the position of the right answer in XML
+<time></time>
+</question>
+</LSTQ>
+
+400 NOPERMISSION[CL]
+[CL]
+
+14.
+ERES eid[CL]
+Cookie: value[CL]
+[CL]
+
+Return:
+200 OK[CL]
+[CL]
+<?xml version="1.0"?>
+<ERES>
+<student>		//Number of students is equal to or above zero
+<name></name>
+<uid></uid>
+<grade></grade>
+<paper></paper>	//Value is 1, 2, or 3
+</student>
+</ERES>
+
+15.
+MPSTA pid[CL]		//Modify paper status to "Y"; The initial status of paper is "N"
+Cookie: value[CL]
+[CL]
+
+Return:
+200 OK[CL]
+[CL]
+
+400 NOPERMISSION[CL]
+[CL]
+
+404 NOTFOUND[CL]
+[CL]
+
+-----------------------------------------------------------------------------------
+//Admin Module
+-----------------------------------------------------------------------------------
+16.
+USRADD uid passwd[CL]	//Add a user
+Cookie: value[CL]
+[CL]
+<?xml version="1.0"?>
+<USRADD>
+<uid><uid>
+<name></name>
+<photo></photo>
+</USRADD>
+Return:
+200 OK[CL]
+[CL]
+
+400 NO PERMISSION[CL]
+[CL]
+
+17.
+USRDEL uid[CL]		//Delete a user
+Cookie: value[CL]
+[CL]
+
+Return:
+200 OK[CL]
+[CL]
+
+400 NOPERMISSION[CL]
+[CL]
+
+404 NOTFOUND[CL]
+[CL]
+
+18.
+PWDRST uid[CL]		//Password reset
+Cookie: value[CL]
+[CL]
+
+Return:
+200 OK[CL]
+[CL]
+
+400 NOPERMISSION[CL]
+[CL]
+
+404 NOTFOUND[CL]
+[CL]
+
+----------------------------------------------------------
+//Student Module
+----------------------------------------------------------
+19.
+LSTES[CL]		//List all exam information of one student
+Cookie: value[CL]
+[CL]
+
+Return:
+200 OK[CL]
+[CL]
+<?xml version="1.0"?>
+<LSTES>
+<exam>			//The number of exams is equal to or above zero
+<eid></eid>
+<name></name>
+<stime></stime>
+<etime></etime>
+<enablestate></enablestate>
+</exam>
+</LSTES>
+
+400 NOPERMISSION[CL]
+[CL]
+
+20.
+LSTERS[CL]		//List all the exam results of one student
+Cookie: value[CL]
+[CL]
+
+Return:
+200 OK[CL]
+[CL]
+<?xml version="1.0"?>
+<LSTERS>
+<exam>			//The number of exams is equal to or above zero
+<pid></pid>		//Paper id
+<name></name>		//Exam name
+<score></score>
+</exam>
+</LSTERS>
+
+400 NOPERMISSION[CL]
+[CL]
+
+21.
+SEDT pid[CL]		//List one exam result of one student in detail
+Cookie: value[CL]
+[CL]
+
+Return:
+200 OK[CL]
+[CL]
+<?xml version="1.0"?>
+<SEDT>
+<question>			//The number of questions is equal to or above zero
+<qid></qid>
+<cAnswer></cAnswer>
+<stuAnswer></stuAnswer>
+</question>
+</SEDT>
+
+400 NOPERMISSION[CL]
+[CL]
+
+404 NOTFOUND[CL]
+[CL]
+
+22.
+STARTE eid[CL]		//Start an exam
+Cookie: value[CL]
+[CL]
+
+Return:
+200 OK[CL]
+
+400 NOPERMISSION[CL]
+[CL]
+
+404 NOTFOUND[CL]
+[CL]
+
+23.
+GETQNUM eid[CL]		//Get the number of questions in one exam. Database does not store this information.
+Cookie: value[CL]
+[CL]
+
+Return:
+200 OK[CL]
+[CL]
+<?xml version="1.0"?>
+<GETQNUM>
+<qnum></qnum>
+</GETQNUM>
+
+400 NOPERMISSION[CL]
+[CL]
+
+404 NOTFOUND[CL]
+[CL]
+
+24.
+NEXTQ[CL]			//Get next question
+Cookie: value[CL]
+[CL]
+
+Return:
+200 OK[CL]
+[CL]
+<?xml version="1.0"?>
+<NEXTQ>			
+<qid></qid>
+<qdescription></qdescription>
+<choice>			//The number of choices is either 2 or 4
+<cid></cid>
+<cdescription></cdescription>
+</choice>
+</NEXTQ>
+
+400 NOPERMISSION[CL]
+[CL]
+
+404 NOTFOUND[CL]
+[CL]
+
+25.
+UPANS qid cid[CL]		//Upload answer.
+Cookie: value[CL]
+[CL]
+
+Return:
+200 OK[CL]
+
+400 NOPERMISSION[CL]
+[CL]
+
+404 NOTFOUND[CL]
+[CL]

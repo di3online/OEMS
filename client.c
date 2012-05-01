@@ -3,6 +3,7 @@
 #include <string.h>
 #include <assert.h>
 
+#include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -21,7 +22,11 @@ int main(int argc, char **argv)
     char bufsend_size[MAXSIZELEN];
     size_t len_to_send;
     int ret;
-    FILE *fin = fopen("login.in", "r");
+
+    //FILE *fin = fopen("login.in", "r");
+    //FILE *fin = fopen("test/login_teacher.in", "r");
+    FILE *fin = fopen("lstet.in", "r");
+
     assert(fin);
 
     fseek(fin, 0L, SEEK_SET); 
