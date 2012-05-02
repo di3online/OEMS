@@ -58,5 +58,7 @@ uid_t getUIDByCookie(const string &cookie, int &err, PGconn *dbconn)
     //Updated by: Lai
     err = PC_SUCCESSFUL;
 
+    PQclear(res);
+
     return userID;
 }
