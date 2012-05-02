@@ -1,3 +1,10 @@
+/**
+ * @file handle_lstet.cpp
+ * @brief 
+ * @author LaiSHZH
+ * @version 1.0
+ * @date 2012-05-02
+ */
 #include <cstring> 
 
 #include "common.h"
@@ -13,13 +20,31 @@ static string parse_result(PGresult *res);
 string 
 handle_LSTET(const string & rawtext)
 {
-    const char *strfind = "\r\nCookie: ";
-    size_t start = rawtext.find(strfind) + strlen(strfind);
-    size_t stop = rawtext.find("\r\n", start);
-    string cookie = rawtext.substr(start, stop - start);
-
     int err;
     string ret;
+
+    const char *strfind = "\r\nCookie: ";
+    size_t start = rawtext.find(strfind) + strlen(strfind);
+
+    if (start == string::npos)
+    {
+        err = PC_INPUTFORMATERROR;
+        ret = sys_error(err);
+        ret += "\r\n\r\n";
+        return ret;
+    }
+
+    size_t stop = rawtext.find("\r\n", start);
+
+    if (stop == string::npos)
+    {
+        err = PC_INPUTFORMATERROR;
+        ret = sys_error(err);
+        ret += "\r\n\r\n";
+        return ret;
+    }
+    string cookie = rawtext.substr(start, stop - start);
+
     DB db;
     PGconn *dbconn = db.getConn();
     

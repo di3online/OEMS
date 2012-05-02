@@ -37,28 +37,45 @@ char *generate_cookie(char *, size_t, char *);
 string 
 handle_login(const string &rawtext)
 {
+    int err;
     string response;
-
     
     uid_t userID;
     string password;
 
-    size_t start = 0;
-    size_t end = rawtext.find(' ');
-    
-    //ingore the login identifier
+    try {
+        size_t start = 0;
+        size_t end = rawtext.find(' ');
+        
+        if (string::npos == end)
+        {
+            throw 1;
+        }
+        
+        //ingore the login identifier
 
-    //Get the userID
-    start = end + 1;
-    end = rawtext.find(' ', start);
-    userID = rawtext.substr(start, end - start);
+        //Get the userID
+        start = end + 1;
+        end = rawtext.find(' ', start);
+        if (string::npos == end)
+        {
+            throw 2;
+        }
+        userID = rawtext.substr(start, end - start);
 
-    //Get the password
-    start = end + 1;
-    end = rawtext.find_first_of(" \r\n", start);
-    password = rawtext.substr(start, end - start);
+        //Get the password
+        start = end + 1;
+        end = rawtext.find_first_of(" \r\n", start);
+        if (string::npos == end)
+        {
+            throw 3;
+        }
+        password = rawtext.substr(start, end - start);
 
-    int err;
+    } catch (int ) {
+
+    }
+  
     //Init the db connection 
     DB db;
     PGresult *dbres = PQexec(db.getConn(), "BEGIN");

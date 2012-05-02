@@ -23,7 +23,7 @@ int main(int argc, char **argv)
     size_t len_to_send;
     int ret;
 
-    //FILE *fin = fopen("login.in", "r");
+    //FILE *fin = fopen("test/login.in", "r");
     //FILE *fin = fopen("test/login_teacher.in", "r");
     FILE *fin = fopen("lstet.in", "r");
 

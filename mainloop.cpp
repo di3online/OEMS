@@ -1,3 +1,10 @@
+/**
+ * @file mainloop.cpp
+ * @brief 
+ * @author Lai
+ * @version 2.0
+ * @date 2012-05-02
+ */
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -34,7 +41,7 @@ void *thr_start(void *arg);
 
 static void init_db();
 static string child_recv(int sockfd, int *err);
-static string child_distribute(const string &request);
+static string child_distribute(string request);
 static int child_send(int sockfd, const string &data);
 
 int main()
@@ -96,32 +103,6 @@ int main()
             cerr << "pthread create failed" << endl;
             cerr.flush();
         }
-
-
-        /*
-        if (fork() == 0)
-        {
-            
-            cerr << "Accept new client" << endl;
-            cerr.flush();
-            //Close child's listen fd, parent continue to listen it.
-            close(listen_fd);
-
-            char addr[MAXADDR];
-            inet_ntop(AF_INET, &cliaddr.sin_addr, addr, sizeof(addr));
-
-            string str_body = child_recv(connfd);
-
-            string result = child_distribute(str_body);
-
-            child_send(connfd, result);
-
-            
-            exit(0);
-
-        }*/
-
-
         
     }
 
@@ -158,6 +139,7 @@ thr_start(void *fd)
         {
             break;
         }
+
         string result = child_distribute(str_body);
 
         thr_ret = child_send(connfd, result);
@@ -176,7 +158,12 @@ child_recv(int sockfd, int *err)
 {
     *err = 0;
     string request = "";
-    static char buffer[MAXBUF];
+
+    //The reason why many users can't get the correct resopnses is 
+    //that the buffer is static in the previous version.
+    //Wed May  2 17:26:34 CST 2012
+    //
+    char buffer[MAXBUF];
 
     size_t nread = MAXSIZELEN;
     size_t size_to_read = MAXSIZELEN;
@@ -195,7 +182,7 @@ child_recv(int sockfd, int *err)
     }
     buffer[MAXSIZELEN] = '\0';
 
-    char size[MAXSIZELEN];
+    char size[MAXBUF];
     snprintf(size, sizeof(size), 
             "%lu has been read on buffersize", 
             MAXSIZELEN - size_to_read);
@@ -217,6 +204,8 @@ child_recv(int sockfd, int *err)
 
     int cur_size = 0;
 
+    memset(buffer, 0, sizeof(buffer));
+
     while (size_to_read > 0)
     {
         cur_size = read(sockfd, buffer, size_to_read);
@@ -236,18 +225,20 @@ child_recv(int sockfd, int *err)
         }
         
         buffer[cur_size] = '\0';
-        request += buffer;
+        string content = buffer;
+        request += content;
         size_to_read -= cur_size;
     }
     cerr << "out of read loop" << endl;
     cerr.flush();
+
 
     return request;
 }
 
 static 
 string 
-child_distribute(const string &request)
+child_distribute(string request)
 {
     string result;
     size_t loc = request.find_first_of(" \r\n");
