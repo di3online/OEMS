@@ -83,6 +83,7 @@ handle_login(const string &rawtext)
     if (PQresultStatus(dbres) != PGRES_COMMAND_OK)
     {
         response = sys_error(PC_DBERROR);
+        response += "\r\n\r\n";
         PQclear(dbres);
         return response;
     }
@@ -94,6 +95,7 @@ handle_login(const string &rawtext)
     if (err != PC_SUCCESSFUL)
     {
         response = sys_error(err);
+        response += "\r\n\r\n";
         PQexec(db.getConn(), "ROLLBACK");
         return response;
     }
@@ -105,6 +107,7 @@ handle_login(const string &rawtext)
     if (err != PC_SUCCESSFUL)
     {
         response = sys_error(err);
+        response += "\r\n\r\n";
         PQexec(db.getConn(), "ROLLBACK");
         return response;
     }
@@ -113,6 +116,7 @@ handle_login(const string &rawtext)
     if (PQresultStatus(dbres) != PGRES_COMMAND_OK)
     {
         response = sys_error(PC_DBERROR);
+        response += "\r\n\r\n";
         PQexec(db.getConn(), "ROLLBACK");
         return response;
     }

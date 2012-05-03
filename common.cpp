@@ -27,18 +27,18 @@ echo_gid(const int &gid)
     switch (gid)
     {
         case GID_ADMIN:
-            res = "ADMIN";
+            res = "admin";
             break;
         case GID_TEACHER:
-            res = "TEACHER";
+            res = "teacher";
             break;
         case GID_STUDENT:
-            res = "STUDENT";
+            res = "student";
             break;
         case GID_UNKNOWN:
             //pass
         default:
-            res = "UNKNOWN GROUP";
+            res = "unkown";
             break;
     }
     return res;
