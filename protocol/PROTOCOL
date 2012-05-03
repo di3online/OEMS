@@ -11,6 +11,16 @@ OEMS Protocol version 2.3
 /*
  *Modify LSTQ(add tag description)
  */
+
+OEMS Protocol version 2.4
+/*
+ *Modify USRADD
+ */
+
+OEMS Protocol version 2.5
+/*
+ *Modify EINF
+ */
 --------------------------------------------------------------------------
 //User Module
 --------------------------------------------------------------------------
@@ -110,7 +120,7 @@ Return:
 <etime></etime>
 <accomplishment>value</accomplishment>	//If all three papers is finished, value="YES", Else value="NO"
 <management>value</management>		//Value=online or offline
-<status>value</status>			//Value=closed or started
+<status>value</status>			//Value=closed, started or finished
 </exam>
 </LSTET>
 
@@ -130,6 +140,9 @@ Return:
 <course></course>
 <stime></stime>
 <etime></etime>
+<accomplishment>value</accomplishment>	//If all three papers is finished, value="YES", Else value="NO"
+<management>value</management>		//Value=online or offline
+<status>value</status>			//Value=closed, started or finished
 <paper>
 <pid></pid>
 <status></status>	//Value is Y or N, represent the paper is finished or not; The initial status of paper is "N"
@@ -324,12 +337,13 @@ Return:
 //Admin Module
 -----------------------------------------------------------------------------------
 16.
-USRADD uid passwd[CL]	//Add a user
+USRADD[CL]	//Add a user
 Cookie: value[CL]
 [CL]
 <?xml version="1.0"?>
 <USRADD>
 <uid><uid>
+<gid></gid>
 <name></name>
 <photo></photo>
 </USRADD>
