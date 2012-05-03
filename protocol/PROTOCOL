@@ -171,9 +171,9 @@ Cookie: value[CL]
 <MEINF>
 <name></name>
 <course></course>
-<stime></stime>
-<etime></etime>
-<accomplishment></accomplishment>
+<stime>2012-05-03 10:00:00</stime>
+<etime>2012-05-03 11:00:00</etime>
+<accomplishment></accomplishment> 
 <management></management>
 <status></status>
 </MEINF>
@@ -259,7 +259,7 @@ Return:
 12.
 MQINF qid[CL]
 Cookie: value[CL]
-[CL]
+[CL]//BUF 为类似Tue May 15 14:46:02 2007格式的，p为时间结构体
 <?xml version="1.0"?>
 <MQINF>
 <description></description>

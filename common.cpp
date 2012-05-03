@@ -76,6 +76,9 @@ sys_error(const int &err)
         case PC_NOTFOUND:
             res = "404 NOT FOUND";
             break;
+        case PC_CONDITIONERROR:
+            res = "405 CONDITION ERROR";
+            break;
         case PC_DBERROR:
             res = "500 DB ERROR";
             break;

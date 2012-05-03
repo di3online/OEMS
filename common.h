@@ -31,10 +31,15 @@ echo_gid(const int &gid);
 
 enum ProtocolCodeList{
     PC_SUCCESSFUL = 0,
+
+    //User error list
     PC_NOPERMISSION,
     PC_INPUTFORMATERROR,
     PC_NOTFOUND,
     PC_MISTATCH,
+    PC_CONDITIONERROR,
+
+    //System error list
     PC_DBERROR,
     PC_SYSTEMERROR,
     PC_UNKNOWNERROR

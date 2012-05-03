@@ -103,6 +103,11 @@ int main()
             cerr << "pthread create failed" << endl;
             cerr.flush();
         }
+
+        //If child thread is not detached from the main pthread,
+        //program will occur memory leak. 
+        //Child can exit by itself.
+        pthread_detach(pthread_id);
         
     }
 
@@ -149,7 +154,7 @@ thr_start(void *fd)
     
     cerr << "client is gone" << endl;
     cerr.flush();
-    pthread_exit((void *) 0);
+    pthread_exit(NULL);
 }
 
 static 
@@ -258,6 +263,10 @@ child_distribute(string request)
         cout.flush();
 
         result = handle_LSTET(request);
+    } else if (command.find("EINF") != string::npos){
+        cout << "enter EINF" << endl;
+        cout.flush();
+        result = handle_EINF(request);
     } else {
         result = "500 DISTRUBUTE COMMAND NOT FOUND\r\n\r\n";
         cerr << request << endl
