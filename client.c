@@ -27,7 +27,8 @@ int main(int argc, char **argv)
     //FILE *fin = fopen("test/login_teacher.in", "r");
     //FILE *fin = fopen("test/lstet.in", "r");
     //FILE *fin = fopen("test/einf.in", "r");
-    FILE *fin = fopen("test/upans.in", "r");
+    //FILE *fin = fopen("test/upans.in", "r");
+    FILE *fin = fopen("test/lstes.in", "r");
 
     assert(fin);
 

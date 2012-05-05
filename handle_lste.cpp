@@ -15,10 +15,22 @@
 #include "getGIDByUID.h"
 #include "handlers.h"
 
+using namespace std;
+
 static string parse_result(PGresult *res);
 
+string handle_LSTES(const string &rawtext)
+{
+    return handle_LSTE(rawtext);
+}
+
+string handle_LSTET(const string &rawtext)
+{
+    return handle_LSTE(rawtext);
+}
+
 string 
-handle_LSTET(const string & rawtext)
+handle_LSTE(const string & rawtext)
 {
     int err;
     string ret;
@@ -53,8 +65,8 @@ handle_LSTET(const string & rawtext)
     gid_t gid = getGIDByUID(uid, err, dbconn);
 
     PGresult *sqlres;
-    if (gid == GID_ADMIN)
-    {
+
+    if (gid == GID_ADMIN){
         sqlres = PQexec(dbconn, 
                 "SELECT owner_id, exam_id, exam_name, course, start_time, end_time, "
                     "exam_id IN ("
@@ -63,8 +75,7 @@ handle_LSTET(const string & rawtext)
                         ")"
                     ")AS accomplishment, management, status FROM exam");
 
-    } else if (gid == GID_TEACHER)
-    {
+    } else if (gid == GID_TEACHER) {
         char query[MAXBUF];
         snprintf(query, sizeof(query), 
                 "SELECT owner_id, exam_id, exam_name, course, start_time, end_time, "
@@ -72,9 +83,15 @@ handle_LSTET(const string & rawtext)
                         "SELECT exam_id FROM paper WHERE exam_id NOT IN ("
                             "SELECT exam_id FROM paper WHERE status = false"
                         ")"
-                    ")AS accomplishment, management, status FROM exam WHERE owner_id = '%s'", uid.c_str());
+                    ")AS accomplishment, management, status FROM exam WHERE owner_id = '%s'", 
+                    uid.c_str());
         sqlres = PQexec(dbconn, query);
         
+    } else if (gid == GID_STUDENT) {
+        sqlres = PQexec(dbconn, 
+                "SELECT owner_id, exam_id, exam_name, course, start_time, end_time, status "
+                "FROM exam WHERE management = true");
+
     } else {
         err = PC_NOPERMISSION;
         ret = sys_error(err);

@@ -8,6 +8,7 @@
 #ifndef __INCLUDE_COMMON_
 #define __INCLUDE_COMMON_
 
+
 #include <string>
 
 //System has its definition of uid_t, pid_t, gid_t
@@ -47,6 +48,9 @@ enum ProtocolCodeList{
 
 const char *
 sys_error(const int &err);
+
+time_t convert_time(const char *str);
+void convert_time(char *to, size_t size, const char *from);
 
 #define MAXBUF 4096
 #endif

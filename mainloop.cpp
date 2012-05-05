@@ -267,7 +267,12 @@ child_distribute(string request)
         cout.flush();
         result = handle_LSTET(request);
 
-    } else if (command.find("EINF") != string::npos){
+    } else if (command.find("LSTES") != string::npos){
+        cout << "enter LSTES" << endl;
+        cout.flush();
+        result = handle_LSTES(request);
+
+    }else if (command.find("EINF") != string::npos){
         cout << "enter EINF" << endl;
         cout.flush();
         result = handle_EINF(request);
