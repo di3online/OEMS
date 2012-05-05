@@ -131,7 +131,7 @@ handle_login(const string &rawtext)
     xmlNodePtr root_node = NULL;
 
     doc = xmlNewDoc(BAD_CAST "1.0");
-    root_node = xmlNewNode(NULL, BAD_CAST "login");
+    root_node = xmlNewNode(NULL, BAD_CAST "LOGIN");
 
     xmlDocSetRootElement(doc, root_node);
     xmlNewChild(root_node, NULL, BAD_CAST "gid", 

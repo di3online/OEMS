@@ -11,6 +11,9 @@
 
 #include <string>
 
+#include "getGIDByUID.h"
+#include "getUIDByCookie.h"
+
 //System has its definition of uid_t, pid_t, gid_t
 #define uid_t std::string 
 #define pid_t std::string

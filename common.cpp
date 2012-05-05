@@ -9,6 +9,9 @@
 
 #include "common.h"
 
+#include <cstdio>
+#include <cstdlib>
+
 
 /**
  * @brief 
@@ -94,3 +97,44 @@ sys_error(const int &err)
     return res;
 
 }
+
+/**
+ * @brief 
+ *      convert the time string to time_t
+ *
+ * @param str
+ *      time string whose format is like 
+ *      2012-05-03 22:33:13
+ */
+time_t
+convert_time(const char *str)
+{
+    struct tm time;
+
+    sscanf(str, "%d-%d-%d %d:%d:%d", 
+            &time.tm_year, 
+            &time.tm_mon,
+            &time.tm_mday,
+            &time.tm_hour,
+            &time.tm_min,
+            &time.tm_sec);
+    time.tm_year -= 1900;
+    time.tm_mon -= 1;
+
+    return mktime(&time);
+
+}
+
+void 
+convert_time(char *to, size_t size, const char *from)
+{
+    time_t timeval = strtol(from, NULL, 10);
+    struct tm time;
+
+    localtime_r(&timeval, &time);
+
+    strftime(to, size, "%F %T", &time);
+
+    return ;
+}
+

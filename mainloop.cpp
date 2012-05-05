@@ -281,7 +281,51 @@ child_distribute(string request)
         cout << "enter UPANS" << endl;
         cout.flush();
         result = handle_UPANS(request);
+    } else if (command.find("ADDE") != string::npos){
+        cout << "enter ADDE" << endl;
+        cout.flush();
+        result = handle_ADDE(request);
+    } else if (command.find("MEINF") != string::npos){
+        cout << "enter MEINF" << endl;
+        cout.flush();
+        result = handle_MEINF(request);
+    } else if (command.find("MPSTA") != string::npos){
+        cout << "enter MPSTA" << endl;
+        cout.flush();
+        result = handle_MPSTA(request);
+    } else if (command.find("ADDQ") != string::npos){
+        cout << "enter ADDQ" << endl;
+        cout.flush();
+        result = handle_ADDQ(request);
+    } else if (command.find("MQINF") != string::npos){
+        cout << "enter MQINF" << endl;
+        cout.flush();
+        result = handle_MQINF(request);
+    } else if (command.find("USRINF") != string::npos){
+        cout << "enter USRINF" << endl;
+        cout.flush();
+        result = handle_USRINF(request);
 
+    } else if (command.find("MUSRINF") != string::npos){
+        cout << "enter MUSRINF" << endl;
+        cout.flush();
+        result = handle_MUSRINF(request);
+    } else if (command.find("PWDCHG") != string::npos){
+        cout << "enter PWDCHG" << endl;
+        cout.flush();
+        result = handle_PWDCHG(request);
+    } else if (command.find("PWDRST") != string::npos){
+        cout << "enter PWDRST" << endl;
+        cout.flush();
+        result = handle_PWDRST(request);
+    } else if (command.find("USRADD") != string::npos){
+        cout << "enter USRADD" << endl;
+        cout.flush();
+        result = handle_USRADD(request);
+    } else if (command.find("USRDEL") != string::npos){
+        cout << "enter USRDEL" << endl;
+        cout.flush();
+        result = handle_USRDEL(request);
     } else {
         result = "500 DISTRUBUTE COMMAND NOT FOUND\r\n\r\n";
         cerr << request << endl
