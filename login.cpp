@@ -121,6 +121,8 @@ handle_login(const string &rawtext)
         return response;
     }
 
+    PQclear(dbres);
+
     response = sys_error(PC_SUCCESSFUL);
     response += "\r\n\r\n";
 

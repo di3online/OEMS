@@ -40,6 +40,7 @@ const static int SERV_PORT = 8083;
 void *thr_start(void *arg);
 
 static void init_db();
+static void destroy_db();
 static string child_recv(int sockfd, int *err);
 static string child_distribute(string request);
 static int child_send(int sockfd, const string &data);
@@ -79,7 +80,8 @@ int main()
     
     //struct sockaddr_in cliaddr;
     //socklen_t len;
-    while (1)
+    int flag = 1;
+    while (flag)
     {
 
         //int connfd = accept(listen_fd, (struct sockaddr *) &cliaddr, &len);
@@ -110,6 +112,8 @@ int main()
         pthread_detach(pthread_id);
         
     }
+
+    destroy_db();
 
     return 0;
 
@@ -346,9 +350,11 @@ init_db()
         do {
             ptr->conns[i] = PQconnectdb(DB::conninfo);
             count++;
-        } while (ptr->conns[i] == NULL && count < 3);
+        } while (PQstatus(ptr->conns[i]) != CONNECTION_OK && count < 3);
         if (count == 3)
         {
+            cerr << "PQ error" << endl;
+            cerr.flush();
             break;
         }
 
@@ -359,5 +365,22 @@ init_db()
     sem_init(&ptr->sem_conns, 1, ptr->count);
     sem_post(&ptr->mutex);
 
+    return ;
+}
+
+static 
+void
+destroy_db()
+{
+    struct DBConns *ptr = DB::p_dbconns;
+    sem_wait(&ptr->mutex);
+
+    for (unsigned int i = ptr->count - 1; i >= 0; --i)
+    {
+        PQfinish(ptr->conns[i]);
+        ptr->count --;
+    }
+    sem_post(&ptr->mutex);
+    
     return ;
 }

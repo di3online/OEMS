@@ -174,9 +174,9 @@ handle_EINF(const string &rawtext)
 
             if (!strcmp(PQgetvalue(res_paper, i, 1), "t"))
             {
-                xmlNewChild(paper_node, NULL, BAD_CAST "status", BAD_CAST "YES");
+                xmlNewChild(paper_node, NULL, BAD_CAST "status", BAD_CAST "Y");
             } else {
-                xmlNewChild(paper_node, NULL, BAD_CAST "status", BAD_CAST "NO");
+                xmlNewChild(paper_node, NULL, BAD_CAST "status", BAD_CAST "N");
             }
         }
 
