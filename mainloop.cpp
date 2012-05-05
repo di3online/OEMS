@@ -265,12 +265,18 @@ child_distribute(string request)
     } else if (command.find("LSTET") != string::npos){
         cout << "enter LSTET" << endl;
         cout.flush();
-
         result = handle_LSTET(request);
+
     } else if (command.find("EINF") != string::npos){
         cout << "enter EINF" << endl;
         cout.flush();
         result = handle_EINF(request);
+
+    } else if (command.find("UPANS") != string::npos){
+        cout << "enter UPANS" << endl;
+        cout.flush();
+        result = handle_UPANS(request);
+
     } else {
         result = "500 DISTRUBUTE COMMAND NOT FOUND\r\n\r\n";
         cerr << request << endl
