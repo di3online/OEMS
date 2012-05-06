@@ -3,11 +3,85 @@
 #include <cstring>
 
 using namespace std;
-
 string handle_USRINF(const string &rawtext)
 {
-    return "";
+    string cr="\r\n";
+    string ret,info,user_cookie;
+    uid_t user_id,ope_id;
+    DB db;
+    PGconn *conn = db.getConn();
+
+    int err = PC_SUCCESSFUL;
+    string feedback = "nothing";
+    size_t start = 0;
+    size_t end = rawtext.find(' ');
+
+    string title = rawtext.substr(start, end - start);
+
+    if(title!= "USRINF")
+    {
+        err = PC_INPUTFORMATERROR;
+        ret = sys_error(err)+cr+cr;
+        return ret;
+    }
+
+    start = end + 1;
+    end = rawtext.find("\r\n");
+
+    user_id= rawtext.substr(start, end - start);
+
+    start = end + 2;
+    end = rawtext.find(' ', start);
+
+    title = rawtext.substr(start, end - start);
+
+
+    if(title!= "Cookie:")
+    {
+        err = PC_INPUTFORMATERROR;
+        ret = sys_error(err)+cr+cr;
+        return ret;
+    }
+
+
+    start = end + 1;
+    end = rawtext.find("\r\n", start);
+    user_cookie = rawtext.substr(start, end - start);
+
+
+
+    ope_id = getUIDByCookie(user_cookie,err,conn);
+    if(err!= PC_SUCCESSFUL)
+    {
+        ret = sys_error(err)+cr+cr;
+        return ret;
+    }
+    int temp = getGIDByUID(ope_id,err,conn);
+    if(err!=PC_SUCCESSFUL)
+    {
+        ret = sys_error(err)+cr+cr;
+        return ret;
+    }
+    //Allow teacher to get other users' info 
+    //Updated by: Lai
+    if (!( temp==GID_ADMIN || ope_id == user_id || temp == GID_TEACHER))
+    {
+        err =PC_NOPERMISSION;
+        ret = sys_error(err)+cr+cr;
+        return ret;
+    }
+    getUserInfo(user_id,feedback,err,conn);
+    if(err!=PC_SUCCESSFUL)
+    {
+        ret=sys_error(err)+cr+cr;
+        return ret;
+    }
+    ret=sys_error(err)+cr+feedback;
+    return ret;
+
+
 }
+
 string handle_MUSRINF(const string &rawtext)
 {
     string cr="\r\n";
@@ -300,10 +374,13 @@ string handle_USRADD(const string& rawtext)
     //Get the new password
     cookie = rawtext.substr(start, end - start);
 
-    start = end + 2;
+    //start = end + 2;
+    //Updated by: Lai
+    start = end + 4;
     end = sizeof(rawtext);
 
     info = rawtext.substr(start, end - start);
+    //info = rawtext.substr(start);
 
     //get the operator~
     //op = getUIDByCookie(cookie, err, db.getConn());

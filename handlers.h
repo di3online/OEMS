@@ -33,4 +33,10 @@ std::string handle_MPSTA(const std::string &rawtext);
 
 std::string handle_ADDQ(const std::string &rawtext);
 std::string handle_MQINF(const std::string &rawtext);
+
+std::string handle_DELE(const std::string &rawtext);
+std::string handle_DELQ(const std::string &rawtext);
+
+std::string handle_LSTQ(const std::string &rawtext);
+
 #endif

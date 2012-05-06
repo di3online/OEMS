@@ -18,7 +18,7 @@
 
 
 //Five hours
-const static unsigned int CONST_LOGIN_INTERVAL = 60;// * 60 * 12;
+const static unsigned int CONST_LOGIN_INTERVAL = 60 * 60 * 12;// * 60 * 12;
 
 using namespace std;
 

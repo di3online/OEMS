@@ -271,7 +271,10 @@ child_distribute(string request)
         cout << "enter LSTES" << endl;
         cout.flush();
         result = handle_LSTES(request);
-
+    } else if (command.find("MEINF") != string::npos){
+        cout << "enter MEINF" << endl;
+        cout.flush();
+        result = handle_MEINF(request);
     }else if (command.find("EINF") != string::npos){
         cout << "enter EINF" << endl;
         cout.flush();
@@ -285,10 +288,7 @@ child_distribute(string request)
         cout << "enter ADDE" << endl;
         cout.flush();
         result = handle_ADDE(request);
-    } else if (command.find("MEINF") != string::npos){
-        cout << "enter MEINF" << endl;
-        cout.flush();
-        result = handle_MEINF(request);
+
     } else if (command.find("MPSTA") != string::npos){
         cout << "enter MPSTA" << endl;
         cout.flush();
@@ -301,15 +301,27 @@ child_distribute(string request)
         cout << "enter MQINF" << endl;
         cout.flush();
         result = handle_MQINF(request);
+    } else if (command.find("DELE") != string::npos){
+        cout << "enter DELE" << endl;
+        cout.flush();
+        result = handle_DELE(request);
+    } else if (command.find("DELQ") != string::npos){
+        cout << "enter DELQ" << endl;
+        cout.flush();
+        result = handle_DELQ(request);
+    } else if (command.find("LSTQ") != string::npos){
+        cout << "enter LSTQ" << endl;
+        cout.flush();
+        result = handle_LSTQ(request);
+    } else if (command.find("MUSRINF") != string::npos){
+        cout << "enter MUSRINF" << endl;
+        cout.flush();
+        result = handle_MUSRINF(request);
     } else if (command.find("USRINF") != string::npos){
         cout << "enter USRINF" << endl;
         cout.flush();
         result = handle_USRINF(request);
 
-    } else if (command.find("MUSRINF") != string::npos){
-        cout << "enter MUSRINF" << endl;
-        cout.flush();
-        result = handle_MUSRINF(request);
     } else if (command.find("PWDCHG") != string::npos){
         cout << "enter PWDCHG" << endl;
         cout.flush();

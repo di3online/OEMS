@@ -17,4 +17,6 @@ void setUserInfo (const uid_t &ope, const uid_t &usr, const string &info,int &er
 uid_t userAdd (const string& cookie, const string& text, int &err, PGconn *dbconn);
 
 string userDel (uid_t op, uid_t delusr, int &err, PGconn *dbconn);
+
+void getUserInfo ( const uid_t &user_id, string & info,int &err,PGconn *dbconn);
 #endif

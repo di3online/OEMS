@@ -131,6 +131,8 @@ parse_result(PGresult *res)
     root_node = xmlNewNode(NULL, BAD_CAST "LSTET");
 
     xmlDocSetRootElement(doc, root_node);
+    char time[MAXBUF];
+
     for (int i = 0; i < PQntuples(res); ++i)
     {
         xmlNodePtr exam_node 
@@ -154,8 +156,12 @@ parse_result(PGresult *res)
                 tag = "course";
             } else if (strcmp(col, "start_time") == 0) {
                 tag = "stime";
+                convert_time(time, sizeof(time), value);
+                value = time;
             } else if (strcmp(col, "end_time") == 0) {
                 tag = "etime";
+                convert_time(time, sizeof(time), value);
+                value = time;
             } else if (strcmp(col, "accomplishment") == 0) {
                 tag = "accomplishment";
                 if (!strcmp(value, "t"))

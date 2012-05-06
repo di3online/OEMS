@@ -325,6 +325,8 @@ string userAdd (const string& cookie, const string& info, int &err, PGconn *dbco
     curNode = xmlDocGetRootElement(doc);
     /*check the content of the document*/
     /*Check the type of the root element*/
+
+
     if(xmlStrcmp(curNode->name,BAD_CAST"USRADD"))
     {
         err = PC_INPUTFORMATERROR;
@@ -385,6 +387,20 @@ string userAdd (const string& cookie, const string& info, int &err, PGconn *dbco
     char cuserID[2 * userID.size() + 1];
     PQescapeString(cuserID, userID.c_str(), userID.size());
     userID = cuserID;
+
+    //Add by: Lai
+    if (groupID == "admin") {
+        groupID = "0";
+    } else if (groupID == "teacher") {
+        groupID = "1";
+    } else if (groupID == "student") {
+        groupID = "2";
+    } else {
+        err = PC_INPUTFORMATERROR;
+        ret = sys_error(err);
+        ret += "\r\n\r\n";
+        return ret;
+    }
 
     char cgroupID[2 * groupID.size() + 1];
     PQescapeString(cgroupID, groupID.c_str(), groupID.size());
@@ -511,5 +527,134 @@ string userDel (uid_t op, uid_t delusr, int &err, PGconn *dbconn)
     ret = ret + "\r\n" + "\r\n";
 
     return ret;
+
+}
+
+
+
+void getUserInfo ( const uid_t &user_id, string & info,int &err,PGconn *dbconn)
+{
+    string cr = "\r\n";
+
+    string db_name,db_phone,db_email;
+
+
+    //Init the db connection
+    PGresult *res = PQexec(dbconn, "BEGIN");
+
+    if (PQresultStatus(res) != PGRES_COMMAND_OK)
+    {
+        err = PC_DBERROR;
+        PQclear(res);
+        return ;
+    }
+    PQclear(res);
+
+    char cuser[2 * user_id.size() + 1];
+
+    PQescapeString(cuser, user_id.c_str(), user_id.size());
+
+    string t = cuser;
+    //get user's name from db
+    string sql = "SELECT name FROM users WHERE user_id ='"+t+"'";
+    res = PQexec(dbconn, sql.c_str());
+
+
+    if (PQresultStatus(res) != PGRES_TUPLES_OK){
+        /*ret = PQresStatus(PQresultStatus(res));
+        cout<<ret;*/
+        err = PC_DBERROR;
+        PQclear(res);
+        PQexec(dbconn, "ROLLBACK");
+
+        return ;
+    }
+
+    db_name = PQgetvalue(res, 0, 0);
+
+
+    PQclear(res);
+    //get the user's email from db
+    sql = "SELECT email FROM users WHERE user_id ='"+t+"'";
+    res = PQexec(dbconn, sql.c_str());
+
+
+    if (PQresultStatus(res) != PGRES_TUPLES_OK){
+        /*ret = PQresStatus(PQresultStatus(res));
+        cout<<ret;*/
+        err = PC_DBERROR;
+        PQclear(res);
+        PQexec(dbconn, "ROLLBACK");
+
+        return ;
+    }
+
+    db_email = PQgetvalue(res, 0, 0);
+
+
+    PQclear(res);
+    //get user's phone from db
+    sql = "SELECT telephone FROM users WHERE user_id ='"+t+"'";
+    res = PQexec(dbconn, sql.c_str());
+
+
+    if (PQresultStatus(res) != PGRES_TUPLES_OK){
+        /*ret = PQresStatus(PQresultStatus(res));
+        cout<<ret;*/
+        err = PC_DBERROR;
+        PQclear(res);
+        PQexec(dbconn, "ROLLBACK");
+
+        return ;
+    }
+
+    db_phone = PQgetvalue(res, 0, 0);
+
+
+    PQclear(res);
+
+    res = PQexec(dbconn, "COMMIT");
+    if (PQresultStatus(res) != PGRES_COMMAND_OK)
+    {
+        err=PC_DBERROR;
+        PQexec(dbconn, "ROLLBACK");
+        return ;
+    }
+    PQclear(res);
+
+
+
+    //Generate the XML body
+    xmlDocPtr doc = NULL;
+    xmlNodePtr root_node = NULL;
+
+    doc = xmlNewDoc(BAD_CAST "1.0");
+    root_node = xmlNewNode(NULL, BAD_CAST "USRINF");
+
+    xmlDocSetRootElement(doc, root_node);
+    xmlNewChild(root_node, NULL, BAD_CAST "uid",
+                        BAD_CAST user_id.c_str());
+
+    xmlNewChild(root_node, NULL, BAD_CAST "name",
+                        BAD_CAST db_name.c_str());
+
+    xmlNewChild(root_node, NULL, BAD_CAST "email",
+                        BAD_CAST db_email.c_str());
+
+    xmlNewChild(root_node, NULL, BAD_CAST "phone",
+                        BAD_CAST db_phone.c_str());
+
+    xmlChar *xmlbuffer;
+    int buffersize;
+
+    xmlDocDumpFormatMemory(doc, &xmlbuffer, &buffersize, 1);
+
+    info =cr+(char *)xmlbuffer;
+
+
+    xmlFree(xmlbuffer);
+    xmlFreeDoc(doc);
+
+
 
 }

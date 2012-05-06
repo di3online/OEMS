@@ -20,6 +20,7 @@ using namespace std;
     uid_t userID;
     qid_t questionID;
     cid_t choiceID;
+    pid_t paperID;
     string temp_get;
     // define the return value
     string response;
@@ -33,7 +34,7 @@ using namespace std;
     string check_ADDQ = "";
 
     size_t start = 0;
-    size_t end = rawtext.find("\r\n");
+    size_t end = rawtext.find(" ");
 
     check_ADDQ = rawtext.substr(start, end - start);
     //check the method is ADDQ
@@ -43,10 +44,16 @@ using namespace std;
     }
 
     //Init the err
-    int err = PC_SUCCESSFUL;
+    int err = PC_UNKNOWNERROR;
     //Init the db connection
     DB db;
     PGconn *conn = db.getConn();
+
+    // get the paperID
+    start = end + 1;
+    end = rawtext.find("\r\n", start);
+    temp_get= rawtext.substr(start, end - start);
+    paperID = temp_get;
 
     // ignore the "cookie: "
     start = end + 2;
@@ -61,6 +68,7 @@ using namespace std;
     if (err != PC_SUCCESSFUL)
     {
         response = sys_error(err);
+        response += "\r\n\r\n";
         return response;
     }
 
@@ -127,6 +135,7 @@ using namespace std;
     if (PQstatus(conn) != CONNECTION_OK)
     {
         response = sys_error(err);
+        response += "\r\n\r\n";
         PQclear(res);
         res = PQexec(conn, "ROLLBACK");
         PQclear(res);
@@ -138,6 +147,7 @@ using namespace std;
     if (err != PC_SUCCESSFUL)
     {
         response = sys_error(err);
+        response += "\r\n\r\n";
         PQclear(res);
         res = PQexec(conn, "ROLLBACK");
         PQclear(res);
@@ -145,12 +155,13 @@ using namespace std;
     }
     if (check_GID == GID_ADMIN ||check_GID == GID_TEACHER)
     {
-        //get the question_id
+        //creat the question_id
         questionID = createQuestion(userID,err,conn);
         //Check the return code of the function
         if (err != PC_SUCCESSFUL)
         {
             response = sys_error(err);
+            response += "\r\n\r\n";
             PQclear(res);
             res = PQexec(conn, "ROLLBACK");
             PQclear(res);
@@ -163,6 +174,7 @@ using namespace std;
         if (err != PC_SUCCESSFUL)
         {
             response = sys_error(err);
+            response += "\r\n\r\n";
             PQclear(res);
             res = PQexec(conn, "ROLLBACK");
             PQclear(res);
@@ -178,17 +190,33 @@ using namespace std;
             if (err != PC_SUCCESSFUL)
             {
                 response = sys_error(err);
+                response += "\r\n\r\n";
                 PQclear(res);
                 res = PQexec(conn, "ROLLBACK");
                 PQclear(res);
                 return response;
             }
             v.push_back(temp_str);
+
             //create choice description
             setChoiceDescription (userID, v[i], choice[i], err, conn);
             if (err != PC_SUCCESSFUL)
             {
                 response = sys_error(err);
+                response += "\r\n\r\n";
+                PQclear(res);
+                res = PQexec(conn, "ROLLBACK");
+                PQclear(res);
+                return response;
+            }
+            
+            //Added By: Lai
+            addChoiceToQuestion(userID, questionID, v[i], err, conn);
+
+            if (err != PC_SUCCESSFUL)
+            {
+                response = sys_error(err);
+                response += "\r\n\r\n";
                 PQclear(res);
                 res = PQexec(conn, "ROLLBACK");
                 PQclear(res);
@@ -203,6 +231,7 @@ using namespace std;
         if (err != PC_SUCCESSFUL)
         {
             response = sys_error(err);
+            response += "\r\n\r\n";
             PQclear(res);
             res = PQexec(conn, "ROLLBACK");
             PQclear(res);
@@ -212,6 +241,8 @@ using namespace std;
         //escapte string of time
         char ctime[2 * time.size() + 1];
         char cqid[2 * questionID.size() + 1];
+        char cpid[2 * paperID.size() + 1];
+        PQescapeString(cpid, paperID.c_str(), paperID.size());
         PQescapeString(ctime, time.c_str(), time.size());
         PQescapeString(cqid, questionID.c_str(), questionID.size());
 
@@ -219,24 +250,38 @@ using namespace std;
         snprintf(sql, sizeof(sql), "UPDATE question SET timelimit = '%s' where question_id = '%s' ",ctime,cqid);
         //Exec the SQL query
         PGresult *res_1 = PQexec(conn, sql);
-        if (PQresultStatus(res) != PGRES_TUPLES_OK)
+        if (PQresultStatus(res_1) != PGRES_COMMAND_OK)
         {
-            //ret += PQresStatus(PQresultStatus(res));
-            // ret += PQerrorMessage(conn);
-            // cout<<ret;
+            //string ret = PQresStatus(PQresultStatus(res));
+            //ret += PQerrorMessage(conn);
+            //cout<<ret;
+            err = PC_DBERROR;
             response = sys_error(err);
+            response += "\r\n\r\n";
             PQclear(res_1);
             PQclear(res);
             res = PQexec(conn, "ROLLBACK");
             PQclear(res);
             return response;
         }
+        PQclear(res_1);
+
+        //add question to paper
+        addQuestionToPaper(userID, questionID, paperID, err, conn);
+        if (err != PC_SUCCESSFUL)
+            {
+                response = sys_error(err);
+                response += "\r\n\r\n";
+                PQclear(res);
+                res = PQexec(conn, "ROLLBACK");
+                PQclear(res);
+                return response;
+            }
 
         //return the right result
         response = sys_error(PC_SUCCESSFUL);
         response += "\r\n\r\n";
         PQclear(res);
-        PQclear(res_1);
         res = PQexec(conn, "COMMIT");
         PQclear(res);
         return response;
@@ -245,6 +290,7 @@ using namespace std;
     {
         err = PC_NOPERMISSION;
         response = sys_error(err);
+        response += "\r\n\r\n";
         PQclear(res);
         res = PQexec(conn, "ROLLBACK");
         PQclear(res);
@@ -252,5 +298,4 @@ using namespace std;
     }
 
  }
-
 

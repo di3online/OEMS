@@ -22,7 +22,10 @@ oems: mainloop.o \
 	handle_mpsta.o \
 	handle_mqinf.o \
 	handle_addq.o \
-	handle_users.o 
+	handle_users.o \
+	handle_dele.o \
+	handle_delq.o \
+	handle_lstq.o
 	g++ -o oems \
 		mainloop.o\
 	   	login.o \
@@ -44,6 +47,9 @@ oems: mainloop.o \
 		handle_mqinf.o \
 		handle_addq.o \
 		handle_users.o \
+		handle_dele.o \
+		handle_delq.o \
+		handle_lstq.o \
 		-g -lpq -lxml2 -L/usr/local/lib -lpthread
 mainloop.o: mainloop.cpp login.h handlers.h
 	g++ -c mainloop.cpp -g -Wall -I/usr/include/libxml2
@@ -86,6 +92,13 @@ handle_addq.o: handle_addq.cpp
 	g++ -c handle_addq.cpp -g -Wall  -I/usr/include/libxml2
 handle_users.o: handle_users.cpp
 	g++ -c handle_users.cpp -g -Wall -I/usr/include/libxml2
+handle_dele.o: handle_dele.cpp
+	g++ -c handle_dele.cpp -g -Wall
+handle_delq.o: handle_delq.cpp
+	g++ -c handle_delq.cpp -g -Wall
+handle_lstq.o: handle_lstq.cpp
+	g++ -c handle_lstq.cpp -g -Wall -I/usr/include/libxml2
+
 
 
 client: client.c

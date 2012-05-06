@@ -13,7 +13,7 @@
 #define SERV_PORT 8083
 int main(int argc, char **argv)
 {
-    assert(argc == 3);
+    assert(argc == 4);
     int times = atoi(argv[1]);
     int all_times = atoi(argv[2]);;
     char buffer_recv[1024];
@@ -28,7 +28,9 @@ int main(int argc, char **argv)
     //FILE *fin = fopen("test/lstet.in", "r");
     //FILE *fin = fopen("test/einf.in", "r");
     //FILE *fin = fopen("test/upans.in", "r");
-    FILE *fin = fopen("test/lstes.in", "r");
+    //FILE *fin = fopen("test/lstes.in", "r");
+
+    FILE *fin = fopen(argv[3], "r");
 
     assert(fin);
 
