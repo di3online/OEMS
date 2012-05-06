@@ -245,12 +245,25 @@ using namespace std;
                 PQclear(res);
                 return response;
             }
+
+            addChoiceToQuestion(userID, questionID, v[i], err, conn);
+
+            if (err != PC_SUCCESSFUL)
+            {
+                response = sys_error(err);
+                PQclear(res);
+                res = PQexec(conn, "ROLLBACK");
+                PQclear(res);
+                return response;
+
+            }
         }
 
         //set the key choice
         int temp_x;
         std::istringstream in(key);
         in>>temp_x;
+        temp_x -= 1;
         setKeyToQuestion(userID, questionID, v[temp_x], err, conn);
         if (err != PC_SUCCESSFUL)
         {
@@ -267,6 +280,7 @@ using namespace std;
         char cpid[2 * paperID.size() + 1];
         PQescapeString(cpid, paperID.c_str(), paperID.size());
         PQescapeString(ctime, time.c_str(), time.size());
+        PQescapeString(cqid, questionID.c_str(), questionID.size());
 
         snprintf(sql, sizeof(sql), "UPDATE question SET timelimit = '%s' where question_id = '%s' ",ctime,cqid);
         //Exec the SQL query

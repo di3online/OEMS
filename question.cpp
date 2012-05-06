@@ -331,10 +331,10 @@ void deleteQuestion(const uid_t &userID,const qid_t &questionID,
 
         char sql[300];
         // make sure the question_id is exist.
-        snprintf(sql, sizeof(sql), "SELECT question_id FROM choice where choice_id = '%s' ",cqid);
+        snprintf(sql, sizeof(sql), "DELETE FROM question where question_id = '%s' ",cqid);
         //Exec the SQL query
         PGresult *res = PQexec(conn, sql);
-        if (PQresultStatus(res) != PGRES_TUPLES_OK)
+        if (PQresultStatus(res) != PGRES_COMMAND_OK)
         {
             //ret += PQresStatus(PQresultStatus(res));
             //ret += PQerrorMessage(conn);
@@ -343,28 +343,15 @@ void deleteQuestion(const uid_t &userID,const qid_t &questionID,
             return ;
         }
 
-        if (PQntuples(res) == 0)
-        {//If return null
-            err = PC_NOTFOUND;
-            PQclear(res);
-            return ;
-        }
+//        if (PQntuples(res) == 0)
+//        {//If return null
+//            err = PC_NOTFOUND;
+//            PQclear(res);
+//            return ;
+//        }
 
         PQclear(res);
 
-        //delete delete everything in the pool
-        snprintf(sql, sizeof(sql), "DELETE FROM choice WHERE question_id='%s'", cqid);
-        //Exec the SQL query
-        res = PQexec(conn, sql);
-
-        if (PQresultStatus(res) != PGRES_COMMAND_OK)
-        {//If exection failed
-            err = PC_DBERROR;
-            PQclear(res);
-            return ;
-        }
-
-        PQclear(res);
         err = PC_SUCCESSFUL;
         return ;
 

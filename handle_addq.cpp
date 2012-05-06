@@ -227,6 +227,7 @@ using namespace std;
         int temp_x;
         std::istringstream in(key);
         in>>temp_x;
+        temp_x -= 1;
         setKeyToQuestion(userID, questionID, v[temp_x], err, conn);
         if (err != PC_SUCCESSFUL)
         {
