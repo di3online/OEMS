@@ -39,4 +39,7 @@ std::string handle_DELQ(const std::string &rawtext);
 
 std::string handle_LSTQ(const std::string &rawtext);
 
+std::string handle_GETQNUM(const std::string &rawtext);
+std::string handle_ERES(const std::string &rawtext);
+
 #endif

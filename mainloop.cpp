@@ -313,6 +313,15 @@ child_distribute(string request)
         cout << "enter LSTQ" << endl;
         cout.flush();
         result = handle_LSTQ(request);
+    } else if (command.find("GETQNUM") != string::npos){
+        cout << "enter GETQNUM" << endl;
+        cout.flush();
+        result = handle_GETQNUM(request);
+    } else if (command.find("ERES") != string::npos) {
+        cout << "enter ERES" << endl;
+        cout.flush();
+        result = handle_ERES(request);
+    
     } else if (command.find("MUSRINF") != string::npos){
         cout << "enter MUSRINF" << endl;
         cout.flush();

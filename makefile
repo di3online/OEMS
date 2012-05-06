@@ -25,7 +25,9 @@ oems: mainloop.o \
 	handle_users.o \
 	handle_dele.o \
 	handle_delq.o \
-	handle_lstq.o
+	handle_lstq.o \
+	handle_eres.o \
+	handle_getqnum.o
 	g++ -o oems \
 		mainloop.o\
 	   	login.o \
@@ -50,6 +52,8 @@ oems: mainloop.o \
 		handle_dele.o \
 		handle_delq.o \
 		handle_lstq.o \
+		handle_eres.o \
+		handle_getqnum.o \
 		-g -lpq -lxml2 -L/usr/local/lib -lpthread
 mainloop.o: mainloop.cpp login.h handlers.h
 	g++ -c mainloop.cpp -g -Wall -I/usr/include/libxml2
@@ -98,6 +102,10 @@ handle_delq.o: handle_delq.cpp
 	g++ -c handle_delq.cpp -g -Wall
 handle_lstq.o: handle_lstq.cpp
 	g++ -c handle_lstq.cpp -g -Wall -I/usr/include/libxml2
+handle_eres.o: handle_eres.cpp
+	g++ -c handle_eres.cpp -g -Wall -I/usr/include/libxml2
+handle_getqnum.o: handle_getqnum.cpp 
+	g++ -c handle_getqnum.cpp -g -Wall -I/usr/include/libxml2
 
 
 

@@ -509,7 +509,9 @@ string userDel (uid_t op, uid_t delusr, int &err, PGconn *dbconn)
     //Exec the SQL query
     res = PQexec(conn, sql.c_str());
 
-    if (PQresultStatus(res) != PGRES_TUPLES_OK)
+    //Updated By: Lai
+    //change PGRES_TUPLES_OK to PGRES_COMMAND_OK
+    if (PQresultStatus(res) != PGRES_COMMAND_OK)
     {//If exection failed
         err = PC_DBERROR;
         ret = sys_error(err);
