@@ -321,7 +321,18 @@ child_distribute(string request)
         cout << "enter ERES" << endl;
         cout.flush();
         result = handle_ERES(request);
-    
+    } else if (command.find("STARTE") != string::npos) {
+        cout << "enter STARTE" << endl;
+        cout.flush();
+        result = handle_STARTE(request);
+    } else if (command.find("NEXTQ") != string::npos){
+        cout << "enter NEXTQ" << endl;
+        cout.flush();
+        result = handle_NEXTQ(request);
+    } else if (command.find("LSTERS") != string::npos){
+        cout << "enter LSTERS" << endl;
+        cout.flush();
+        result = handle_LSTERS(request);
     } else if (command.find("MUSRINF") != string::npos){
         cout << "enter MUSRINF" << endl;
         cout.flush();

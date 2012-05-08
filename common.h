@@ -35,6 +35,7 @@ echo_gid(const int &gid);
 
 enum ProtocolCodeList{
     PC_SUCCESSFUL = 0,
+    PC_EXAMOVER,
 
     //User error list
     PC_NOPERMISSION,

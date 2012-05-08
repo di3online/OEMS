@@ -129,6 +129,7 @@ parse_result(PGresult *res)
 
     doc = xmlNewDoc(BAD_CAST "1.0");
     root_node = xmlNewNode(NULL, BAD_CAST "LSTET");
+    xmlNodeSetContent(root_node, BAD_CAST "");
 
     xmlDocSetRootElement(doc, root_node);
     char time[MAXBUF];

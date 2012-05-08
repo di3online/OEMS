@@ -14,6 +14,7 @@ oems: mainloop.o \
 	question.o \
 	choice.o \
 	users.o \
+	score.o \
 	handle_lste.o \
 	handle_einf.o \
 	handle_upans.o \
@@ -27,7 +28,9 @@ oems: mainloop.o \
 	handle_delq.o \
 	handle_lstq.o \
 	handle_eres.o \
-	handle_getqnum.o
+	handle_getqnum.o \
+	handle_starte.o \
+	handle_lsters.o
 	g++ -o oems \
 		mainloop.o\
 	   	login.o \
@@ -40,6 +43,7 @@ oems: mainloop.o \
 		question.o \
 		choice.o \
 		users.o \
+		score.o \
 		handle_einf.o \
 		handle_upans.o \
 		handle_lste.o \
@@ -54,6 +58,8 @@ oems: mainloop.o \
 		handle_lstq.o \
 		handle_eres.o \
 		handle_getqnum.o \
+		handle_starte.o \
+		handle_lsters.o \
 		-g -lpq -lxml2 -L/usr/local/lib -lpthread
 mainloop.o: mainloop.cpp login.h handlers.h
 	g++ -c mainloop.cpp -g -Wall -I/usr/include/libxml2
@@ -77,6 +83,8 @@ choice.o: choice.cpp common.h db.h getUIDByCookie.h getGIDByUID.h
 	g++ -c choice.cpp -g -Wall
 users.o: users.cpp
 	g++ -c users.cpp -g -Wall -I/usr/include/libxml2
+score.o: score.cpp
+	g++ -c score.cpp -g -Wall 
 
 handle_lste.o: handle_lste.cpp common.h db.h handlers.h getUIDByCookie.h getGIDByUID.h
 	g++ -c handle_lste.cpp -g -Wall -I/usr/include/libxml2
@@ -106,6 +114,10 @@ handle_eres.o: handle_eres.cpp
 	g++ -c handle_eres.cpp -g -Wall -I/usr/include/libxml2
 handle_getqnum.o: handle_getqnum.cpp 
 	g++ -c handle_getqnum.cpp -g -Wall -I/usr/include/libxml2
+handle_starte.o: handle_starte.cpp
+	g++ -c handle_starte.cpp -g -Wall -I/usr/include/libxml2
+handle_lsters.o: handle_lsters.cpp
+	g++ -c handle_lsters.cpp -g -Wall -I/usr/include/libxml2
 
 
 

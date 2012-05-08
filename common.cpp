@@ -67,6 +67,9 @@ sys_error(const int &err)
         case PC_SUCCESSFUL:
             res = "200 OK";
             break;
+        case PC_EXAMOVER:
+            res = "202 EXAM OVER";
+            break;
         case PC_NOPERMISSION:
             res = "400 NO PERMISSION";
             break;

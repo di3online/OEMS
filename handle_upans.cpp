@@ -10,6 +10,7 @@
 #include "handlers.h"
 #include "getUIDByCookie.h"
 #include "getGIDByUID.h"
+#include "score.h"
 
 using namespace std;
 
@@ -88,7 +89,12 @@ handle_UPANS(const string &rawtext)
 
     char sqlquery[MAXBUF];
     snprintf(sqlquery, sizeof(sqlquery), 
-            "SELECT inexam FROM users WHERE user_id = '%s'", uid.c_str());
+            "SELECT question_id FROM question "
+            "WHERE paper_id = ( "
+                "SELECT currentp FROM users "
+                "WHERE user_id = '%s' "
+            ") AND question_id = %s",
+        uid.c_str(), cqid);
     
     PGresult *sqlres = PQexec(dbconn, sqlquery);
 
@@ -98,11 +104,12 @@ handle_UPANS(const string &rawtext)
         ret = sys_error(err);
         ret += "\r\n\r\n";
 
+        ret += PQerrorMessage(dbconn);
         PQclear(sqlres);
         return ret;
     }
 
-    if (0 != strcmp(PQgetvalue(sqlres, 0, 0), "t"))
+    if (PQntuples(sqlres) == 0)
     {
         err = PC_CONDITIONERROR;
         ret = sys_error(err);
@@ -125,6 +132,8 @@ handle_UPANS(const string &rawtext)
         err = PC_DBERROR;
         ret = sys_error(err);
         ret += "\r\n\r\n";
+
+        ret += PQerrorMessage(dbconn);
         PQclear(sqlres);
         return ret;
     }
@@ -144,7 +153,7 @@ handle_UPANS(const string &rawtext)
         PQclear(sqlres);
 
         snprintf(sqlquery, sizeof(sqlquery),
-                "UPDATE answer_sheet SET answer = '%s', score = 0 "
+                "UPDATE answer_sheet SET answer = %s, score = 0 "
                 "WHERE user_id = '%s' AND question_id = '%s'",
                 ccid, uid.c_str(), cqid);
 
@@ -157,15 +166,22 @@ handle_UPANS(const string &rawtext)
         err = PC_SUCCESSFUL;
         PQclear(sqlres);
 
-        snprintf(sqlquery, sizeof(sqlquery), 
-                "UPDATE answer_sheet SET score = ("
-                    "SELECT score FROM question "
-                    "WHERE question_id = '%s'"
-                ") WHERE user_id = '%s' AND question_id = '%s' "
-                    "AND answer = ("
-                        "SELECT key FROM question WHERE question_id = '%s'"
-                    ")",
-                    cqid, uid.c_str(), cqid, cqid);
+//        snprintf(sqlquery, sizeof(sqlquery), 
+//                "UPDATE answer_sheet SET score = ("
+//                    "SELECT score FROM question "
+//                    "WHERE question_id = '%s'"
+//                ") WHERE user_id = '%s' AND question_id = '%s' "
+//                    "AND answer = ("
+//                        "SELECT key FROM question WHERE question_id = '%s'"
+//                    ")",
+//                    cqid, uid.c_str(), cqid, cqid);
+//
+        snprintf(sqlquery, sizeof(sqlquery),
+                "UPDATE users SET qflag = ( "
+                    "SELECT qflag FROM users "
+                    "WHERE user_id = '%s' "
+                ") + 1 WHERE user_id = '%s' ",
+            uid.c_str(), uid.c_str());
         sqlres = PQexec(dbconn, sqlquery);
 
         if (PQresultStatus(sqlres) != PGRES_COMMAND_OK)
@@ -176,12 +192,15 @@ handle_UPANS(const string &rawtext)
         }
     } else {
         err = PC_DBERROR;
+
     }
 
     PQclear(sqlres);
 
     ret = sys_error(err);
     ret += "\r\n\r\n";
+
+    ret += PQerrorMessage(dbconn);
 
     return ret;
 }
