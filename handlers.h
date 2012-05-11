@@ -46,6 +46,7 @@ std::string handle_STARTE(const std::string &rawtext);
 std::string handle_NEXTQ(const std::string &rawtext);
 
 std::string handle_LSTERS(const std::string &rawtext);
+std::string handle_SEDT(const std::string &rawtext);
 
 
 #endif

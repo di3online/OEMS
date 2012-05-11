@@ -30,7 +30,8 @@ oems: mainloop.o \
 	handle_eres.o \
 	handle_getqnum.o \
 	handle_starte.o \
-	handle_lsters.o
+	handle_lsters.o \
+	handle_sedt.o
 	g++ -o oems \
 		mainloop.o\
 	   	login.o \
@@ -60,6 +61,7 @@ oems: mainloop.o \
 		handle_getqnum.o \
 		handle_starte.o \
 		handle_lsters.o \
+		handle_sedt.o \
 		-g -lpq -lxml2 -L/usr/local/lib -lpthread
 mainloop.o: mainloop.cpp login.h handlers.h
 	g++ -c mainloop.cpp -g -Wall -I/usr/include/libxml2
@@ -118,6 +120,8 @@ handle_starte.o: handle_starte.cpp
 	g++ -c handle_starte.cpp -g -Wall -I/usr/include/libxml2
 handle_lsters.o: handle_lsters.cpp
 	g++ -c handle_lsters.cpp -g -Wall -I/usr/include/libxml2
+handle_sedt.o: handle_sedt.cpp
+	g++ -c handle_sedt.cpp -g -Wall -I/usr/include/libxml2
 
 
 

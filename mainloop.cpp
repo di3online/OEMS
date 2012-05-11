@@ -333,6 +333,10 @@ child_distribute(string request)
         cout << "enter LSTERS" << endl;
         cout.flush();
         result = handle_LSTERS(request);
+    } else if (command.find("SEDT") != string::npos){
+        cout << "enter SEDT" << endl;
+        cout.flush();
+        result = handle_SEDT(request);
     } else if (command.find("MUSRINF") != string::npos){
         cout << "enter MUSRINF" << endl;
         cout.flush();

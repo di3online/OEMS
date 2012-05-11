@@ -6,20 +6,6 @@
 
 #include <iostream>
 
-
-static string
-getPID( const std::string &userID,
-        int &err, PGconn *dbconn);
-
-
-static string
-getName( const std::string &userID,
-        int &err, PGconn *dbconn);
-
-static string
-getScore( const std::string &userID,
-        int &err, PGconn *dbconn);
-
 /**
  * @brief handle_lsters
  *
@@ -75,208 +61,73 @@ getScore( const std::string &userID,
         return response;
     }
 
-    //check the db status
-    if (PQstatus(conn) != CONNECTION_OK)
-    {
-        response = PC_DBERROR;
-        response += "\r\n\r\n";
-        return response;
-    }
+    char sql_buf[MAXBUF];
 
-    //get paper ID
-    paperID = getPID(userID, err, conn);
-    if (err != PC_SUCCESSFUL)
+    snprintf(sql_buf, sizeof(sql_buf),
+            "SELECT e.exam_name as name, "
+                "e.course as course, "
+                "p.paper_id as pid, "
+                "s.final_score as score "
+            "FROM exam e "
+            "INNER JOIN paper p ON e.exam_id = p.exam_id "
+            "INNER JOIN student_exam s ON s.paper_id = p.paper_id "
+            "WHERE s.user_id = '%s'",
+            userID.c_str());
+
+    PGresult *res = PQexec(conn, sql_buf);
+
+    if (PQresultStatus(res) != PGRES_TUPLES_OK)
     {
+        err = PC_DBERROR;
         response = sys_error(err);
         response += "\r\n\r\n";
+        response += PQerrorMessage(conn);
+        PQclear(res);
         return response;
     }
 
-    //get name
-    name = getName(userID, err, db.getConn());
-    if (err != PC_SUCCESSFUL)
-    {
-        response = sys_error(err);
-        response += "\r\n\r\n";
-        return response;
-    }
-
-    //get score
-    score = getScore(userID, err, conn);
-    if (err != PC_SUCCESSFUL)
-    {
-        response = sys_error(err);
-        response += "\r\n\r\n";
-        return response;
-    }
-
-
-    vector<string>::iterator it;
-    /*
-    for (it=questionID.begin(); it<questionID.end(); it++)
-    {
-    cout << " " << *it;
-    cout << endl;
-    }*/
+    response = sys_error(PC_SUCCESSFUL);
+    response += "\r\n\r\n";
 
     xmlDocPtr doc = NULL;
     xmlNodePtr root_node = NULL;
 
     doc = xmlNewDoc(BAD_CAST "1.0");
     root_node = xmlNewNode(NULL, BAD_CAST "LSTERS");
+    xmlNodeSetContent(root_node, BAD_CAST "");
 
     xmlDocSetRootElement(doc, root_node);
 
-    xmlNodePtr exam_node = xmlNewNode( NULL, BAD_CAST "exam");
+    for (int i = 0; i < PQntuples(res); ++i)
+    {
+        xmlNodePtr exam_node = xmlNewNode( NULL, BAD_CAST "exam");
 
-    xmlNewChild(exam_node, NULL, BAD_CAST "pid",BAD_CAST paperID.c_str());
+        xmlNewChild(exam_node, NULL, BAD_CAST "pid",    BAD_CAST PQgetvalue(res, i, 2));
+        xmlNewChild(exam_node, NULL, BAD_CAST "name",   BAD_CAST PQgetvalue(res, i, 0));
+        xmlNewChild(exam_node, NULL, BAD_CAST "course", BAD_CAST PQgetvalue(res, i, 1));
 
-    xmlNewChild(exam_node, NULL, BAD_CAST "name",BAD_CAST name.c_str());
+        if ( !PQgetisnull(res, i, 3))
+        {
+            xmlNewChild(exam_node, NULL, BAD_CAST "score",  BAD_CAST PQgetvalue(res, i, 3));
+        } else {
+            // TODO:regrade the paper of this student
+            xmlNewChild(exam_node, NULL, BAD_CAST "score", BAD_CAST "");
+        }
 
-    xmlNewChild(exam_node, NULL, BAD_CAST "score",BAD_CAST score.c_str());
-
-    xmlAddChild(root_node, exam_node);
-
-
-    //xmlNodePtr paper_node = xmlNewNode(NULL, BAD_CAST "exam");
-    //xmlNewChild(paper_node,NULL,BAD_CAST "pid",BAD_CAST it->c_str());
-
-    /*xmlNodePtr name_node = xmlNewNode(NULL, BAD_CAST "exam");
-    xmlNewChild(name_node,NULL,BAD_CAST "name",BAD_CAST name.c_str());
-
-    xmlNodePtr score_node = xmlNewNode(NULL, BAD_CAST "exam");
-    xmlNewChild(score_node,NULL,BAD_CAST "score",BAD_CAST score.c_str());*/
-
-   // xmlAddChild(root_node,paper_node);
-
+        xmlAddChild(root_node, exam_node);
+    }
 
     xmlChar *xmlbuffer;
     int buffersize;
 
     xmlDocDumpFormatMemory(doc, &xmlbuffer, &buffersize, 1);
 
-    temp_get = (char *)xmlbuffer;
+    response += (char *)xmlbuffer;
 
     xmlFree(xmlbuffer);
     xmlFreeDoc(doc);
-    response = sys_error(PC_SUCCESSFUL);
-    response += "\r\n\r\n";
-    response += temp_get;
+    
+    PQclear(res);
+
     return response;
-
-
  }
-
-string
-getPID( const std::string &userID,
-        int &err, PGconn *dbconn)
-{
-    err = PC_UNKNOWNERROR;
-    PGconn *conn = dbconn;
-
-    string ret;
-    if (PQstatus(conn) != CONNECTION_OK)
-    {
-        ret = "";
-        err = PC_DBERROR;
-        return ret;
-    }
-
-    char cuid[2 * userID.size() + 1];
-    PQescapeString(cuid, userID.c_str(), userID.size());
-
-    char sql[300];
-    snprintf(sql, sizeof(sql), "SELECT paper_id FROM student_exam where user_id = '%s' ",cuid);
-    //Exec the SQL query
-    PGresult *res = PQexec(conn, sql);
-
-    if (PQresultStatus(res) != PGRES_TUPLES_OK)
-    {
-        ret ="";
-        err = PC_DBERROR;
-        PQclear(res);
-        return ret;
-    }
-
-    ret = PQgetvalue(res,0,0);
-    PQclear(res);
-    err = PC_SUCCESSFUL;
-
-    return ret;
-}
-
-string
-getName( const std::string &userID,
-        int &err, PGconn *dbconn)
-{
-    err = PC_UNKNOWNERROR;
-    PGconn *conn = dbconn;
-
-    string ret;
-    if (PQstatus(conn) != CONNECTION_OK)
-    {
-        ret = "";
-        err = PC_DBERROR;
-        return ret;
-    }
-
-    char cuid[2 * userID.size() + 1];
-    PQescapeString(cuid, userID.c_str(), userID.size());
-
-    char sql[300];
-    snprintf(sql, sizeof(sql), "SELECT name FROM users where user_id = '%s' ",cuid);
-    //Exec the SQL query
-    PGresult *res = PQexec(conn, sql);
-
-    if (PQresultStatus(res) != PGRES_TUPLES_OK)
-    {
-        ret ="";
-        err = PC_DBERROR;
-        PQclear(res);
-        return ret;
-    }
-
-    ret = PQgetvalue(res,0,0);
-    PQclear(res);
-    err = PC_SUCCESSFUL;
-
-    return ret;
-}
-
-string
-getScore( const std::string &userID,
-        int &err, PGconn *dbconn)
-{
-    err = PC_UNKNOWNERROR;
-    PGconn *conn = dbconn;
-
-    string ret;
-    if (PQstatus(conn) != CONNECTION_OK)
-    {
-        ret = "";
-        err = PC_DBERROR;
-        return ret;
-    }
-
-    char cuid[2 * userID.size() + 1];
-    PQescapeString(cuid, userID.c_str(), userID.size());
-
-    char sql[300];
-    snprintf(sql, sizeof(sql), "SELECT final_score FROM student_exam where user_id = '%s' ",cuid);
-    //Exec the SQL query
-    PGresult *res = PQexec(conn, sql);
-
-    if (PQresultStatus(res) != PGRES_TUPLES_OK)
-    {
-        ret ="";
-        err = PC_DBERROR;
-        PQclear(res);
-        return ret;
-    }
-
-    ret = PQgetvalue(res,0,0);
-    PQclear(res);
-    err = PC_SUCCESSFUL;
-
-    return ret;
-}

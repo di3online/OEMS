@@ -13,6 +13,7 @@
 
 #include "getGIDByUID.h"
 #include "getUIDByCookie.h"
+#include "db.h"
 
 //System has its definition of uid_t, pid_t, gid_t
 #define uid_t std::string 
@@ -57,6 +58,8 @@ time_t convert_time(const char *str);
 void convert_time(char *to, size_t size, const char *from);
 
 #define MAXBUF 4096
+#define MAXLEN_COOKIE 100
+#define MAXLEN_PID 20
 #endif
 
 
