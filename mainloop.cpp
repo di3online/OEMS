@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <cassert>
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -35,7 +36,7 @@
 
 using namespace std;
 
-const static int SERV_PORT = 8083;
+static int SERV_PORT = 8083;
 
 void *thr_start(void *arg);
 
@@ -45,8 +46,20 @@ static string child_recv(int sockfd, int *err);
 static string child_distribute(string request);
 static int child_send(int sockfd, const string &data);
 
-int main()
+int main(int argc, char **argv)
 {
+    if (argc == 2)
+    {
+        char *endptr = NULL;
+        SERV_PORT = strtol(argv[1], &endptr, 10);
+        if (*endptr != '\0')
+        {
+            perror("Port FORMAT error");
+            exit(EXIT_FAILURE);
+        }
+        
+    }
+
     init_db();
     int ret = 0;
 
@@ -55,6 +68,7 @@ int main()
     if (listen_fd < 0)
     {
         perror("mainloop: socket failed");
+        exit(EXIT_FAILURE);
     }
     
     struct sockaddr_in servaddr;
@@ -69,6 +83,7 @@ int main()
     if (ret < 0)
     {
         perror("mainloop: bind failed");
+        exit(EXIT_FAILURE);
     }
 
     ret = listen(listen_fd, LISTENQ);
@@ -76,6 +91,7 @@ int main()
     if (ret < 0)
     {
         perror("mainloop: listen failed");
+        exit(EXIT_FAILURE);
     }
     
     //struct sockaddr_in cliaddr;
@@ -115,7 +131,7 @@ int main()
 
     destroy_db();
 
-    return 0;
+    exit(EXIT_SUCCESS);
 
 }
 
@@ -444,8 +460,9 @@ init_db()
         } while (PQstatus(ptr->conns[i]) != CONNECTION_OK && count < 3);
         if (count == 3)
         {
-            cerr << "PQ error" << endl;
+            cerr << "PQ error: No more connections can be established" << endl;
             cerr.flush();
+            exit(EXIT_FAILURE);
             break;
         }
 
@@ -455,6 +472,10 @@ init_db()
 
     sem_init(&ptr->sem_conns, 1, ptr->count);
     sem_post(&ptr->mutex);
+
+    std::cout << ptr->count << " connections has been established to Database" << std::endl;
+    std::cout.flush();
+
 
     return ;
 }
