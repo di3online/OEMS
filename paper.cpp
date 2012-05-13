@@ -64,6 +64,8 @@ addQuestionToPaper(const uid_t &uid, const qid_t &qid, const pid_t &pid,
             return ;
         }
 
+        PQclear(res);
+
         snprintf(sql,sizeof(sql), "SELECT * FROM question WHERE question_id ='%s'",cqid);
         res = PQexec(conn,sql);
 

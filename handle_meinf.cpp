@@ -126,6 +126,7 @@ string handle_MEINF(const string &rawtext)
     }
 
     dbres = PQexec(db.getConn(), "COMMIT");
+    PQclear(dbres);
 
     response = sys_error(PC_SUCCESSFUL);
     response += "\r\n\r\n";

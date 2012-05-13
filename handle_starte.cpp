@@ -119,6 +119,41 @@ handle_STARTE(const string &rawtext)
 
         PQclear(res_exam);
 
+        snprintf(sql_buf, sizeof(sql_buf), 
+                "SELECT * FROM student_exam WHERE user_id = '%s' AND paper_id IN ( "
+                    "SELECT paper_id FROM paper WHERE exam_id = %s "
+                ")",
+                uid.c_str(), ceid);
+
+        res_exam = PQexec(dbconn, sql_buf);
+
+        if (PQresultStatus(res_exam) != PGRES_TUPLES_OK)
+        {
+            err = PC_DBERROR;
+            ret = sys_error(err);
+            ret += "\r\n\r\n";
+
+            std::cerr << PQerrorMessage(dbconn) << std::endl;
+            std::cerr.flush();
+            PQclear(res_exam);
+            return ret;
+        }
+        
+        if (PQntuples(res_exam) > 1)
+        {
+            err = PC_NOPERMISSION;
+            ret = sys_error(err);
+            ret += "\r\n\r\n";
+
+            std::cerr << "Student can't take part in the same exam twice. " << std::endl;
+            std::cerr.flush();
+
+            PQclear(res_exam);
+            return ret;
+        }
+
+        PQclear(res_exam);
+
         // time is valid, start the exam
 
 

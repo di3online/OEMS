@@ -119,6 +119,9 @@ void setChoiceDescription(const uid_t &uid, const cid_t &cid, string description
         return;
     }
 
+    //Added By: Lai
+    PQclear(res);
+
     snprintf(sql, sizeof(sql), "UPDATE choice SET answer_content = '%s' WHERE choice_id = %lu", description.c_str(), number_cid);
     res = PQexec(conn, sql);
 

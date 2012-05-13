@@ -394,7 +394,7 @@ child_send(int sockfd,const string &data)
 {
     size_t size = data.size();
     char buf_size[MAXSIZELEN];
-    char buffer[MAXBUF];
+    char *buffer = (char *) malloc(data.size() + 1);
     memmove(buffer, data.c_str(), size);
     buffer[size] = '\0';
 
@@ -423,6 +423,8 @@ child_send(int sockfd,const string &data)
         }
         len_start += len_write;
     }
+
+    free(buffer);
 
     if (len_write < 0)
     {

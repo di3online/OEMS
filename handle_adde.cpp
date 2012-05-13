@@ -114,6 +114,7 @@ string handle_ADDE(const string &rawtext)
         return response;
     }
     dbres = PQexec(db.getConn(), "COMMIT");
+    PQclear(dbres);
 
     response = sys_error(PC_SUCCESSFUL);
     response += "\r\n\r\n";

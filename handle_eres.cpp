@@ -212,6 +212,7 @@ string handle_ERES(const string &rawtext)
     dbres = PQexec(db.getConn(), "COMMIT");
 
     PQclear(res);
+    PQclear(dbres);
     err = PC_SUCCESSFUL;
     response = sys_error(err);
     response += "\r\n\r\n";

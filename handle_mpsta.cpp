@@ -18,14 +18,9 @@ using namespace std;
  * @brief handle_mpsta
  *
  * @param rawtext
- *          The text which contain cookie, eid and the start time
- * @param userID
- *          The uid
- * @param pid
- *          The pid
- * @param status
- *          Y == true, N == false
- */
+ *          The text which contain cookie, pid
+ **/
+
 string handle_MPSTA(const string &rawtext)
 {
     uid_t userID;
@@ -88,15 +83,20 @@ string handle_MPSTA(const string &rawtext)
 
     ss << pid;
     ss >> number_pid;
-    snprintf(sql, sizeof(sql), "SELECT * FROM paper WHERE paper_id = %lu", number_pid);
+    
+    //Check if there is some questions in the paper.
+    snprintf(sql, sizeof(sql), "SELECT * FROM question WHERE paper_id = %lu", number_pid);
 
     //Exec the SQL query
     PGresult *res;
     res = PQexec(db.getConn(), sql);
 
-    //check if the eid is exist
+    
     if( PQntuples(res) == 0)
     {
+        //If there is no question in the paper, 
+        //the paper won't be accomplished.
+
         err = PC_NOTFOUND;
         response = sys_error(err);
         response += "\r\n\r\n";
@@ -105,7 +105,9 @@ string handle_MPSTA(const string &rawtext)
         return response;
     }
 
-    snprintf(sql, sizeof(sql), "UPDATE paper SET status = '%s' WHERE paper_id = %lu", status.c_str(), number_pid);
+    snprintf(sql, sizeof(sql), 
+            "UPDATE paper SET status = '%s' WHERE paper_id = %lu", 
+            status.c_str(), number_pid);
     res = PQexec(db.getConn(), sql);
     if ((PQresultStatus(res) != PGRES_COMMAND_OK))
     {
@@ -121,6 +123,7 @@ string handle_MPSTA(const string &rawtext)
     err = PC_SUCCESSFUL;
 
     dbres = PQexec(db.getConn(), "COMMIT");
+    PQclear(dbres);
 
     response = sys_error(err);
     response += "\r\n\r\n";

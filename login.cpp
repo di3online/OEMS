@@ -96,7 +96,8 @@ handle_login(const string &rawtext)
     {
         response = sys_error(err);
         response += "\r\n\r\n";
-        PQexec(db.getConn(), "ROLLBACK");
+        dbres = PQexec(db.getConn(), "ROLLBACK");
+        PQclear(dbres);
         return response;
     }
 
@@ -108,16 +109,19 @@ handle_login(const string &rawtext)
     {
         response = sys_error(err);
         response += "\r\n\r\n";
-        PQexec(db.getConn(), "ROLLBACK");
+        dbres = PQexec(db.getConn(), "ROLLBACK");
+        PQclear(dbres);
         return response;
     }
 
     dbres = PQexec(db.getConn(), "COMMIT");
     if (PQresultStatus(dbres) != PGRES_COMMAND_OK)
     {
+        PQclear(dbres);
         response = sys_error(PC_DBERROR);
         response += "\r\n\r\n";
-        PQexec(db.getConn(), "ROLLBACK");
+        dbres = PQexec(db.getConn(), "ROLLBACK");
+        PQclear(dbres);
         return response;
     }
 

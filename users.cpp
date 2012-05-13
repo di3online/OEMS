@@ -503,6 +503,8 @@ string userDel (uid_t op, uid_t delusr, int &err, PGconn *dbconn)
         PQclear(res);
         return ret;
     }
+    //Added By: Lai
+    PQclear(res);
 
     sql = "DELETE FROM users WHERE user_id = '" + t + "'";
 

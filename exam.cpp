@@ -317,6 +317,7 @@ void setExamInfo(const uid_t &uid, const eid_t &eid,
         PQclear(res);
         return;
     }
+    PQclear(res);
 
     //Set the accomplishment
     snprintf(sql, sizeof(sql), "SELECT  exam_id IN ( "
@@ -338,6 +339,8 @@ void setExamInfo(const uid_t &uid, const eid_t &eid,
     {
         accomplishment = "true";
     }
+
+    PQclear(res);
 
     //Set the management
     if (management == "online" && accomplishment == "true")

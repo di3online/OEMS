@@ -95,8 +95,13 @@ using namespace std;
     while ( xmlStrcmp(curr->name, (const xmlChar *) "description") )
             curr = curr->xmlChildrenNode;
     char temp_arr[200];
-    int temp_size = strlen((const char*)xmlNodeGetContent(curr->xmlChildrenNode)) + 1;
-    strncpy(temp_arr, (const char*)xmlNodeGetContent(curr->xmlChildrenNode),temp_size);
+
+    //xmlNodeGetContent should be freed after used.
+    //Updated By: Lai
+    char *value = (char*)xmlNodeGetContent(curr->xmlChildrenNode);
+
+    int temp_size = strlen(value) + 1;
+    strncpy(temp_arr, value, temp_size);
     description = temp_arr;
 
     //get the choice
@@ -108,23 +113,29 @@ using namespace std;
 
             xmlNodePtr data;
             data = curr->xmlChildrenNode;
-            temp_size = strlen((const char*)xmlNodeGetContent(data)) + 1;
-            strncpy(temp_arr, (const char*)xmlNodeGetContent(data),temp_size);
+            
+            value = (char*)xmlNodeGetContent(data);
+            temp_size = strlen(value) + 1;
+            strncpy(temp_arr, value, temp_size);
             choice[count_c] = temp_arr;
             count_c++;
     }
 
      //get the key
-    temp_size = strlen((const char*)xmlNodeGetContent(curr->xmlChildrenNode)) + 1;
-    strncpy(temp_arr, (const char*)xmlNodeGetContent(curr->xmlChildrenNode),temp_size);
+    value = (char*)xmlNodeGetContent(curr->xmlChildrenNode);
+    temp_size = strlen(value) + 1;
+    strncpy(temp_arr, value, temp_size);
     key = temp_arr;
 
     //get the time
     curr = curr->next;
-    temp_size = strlen((const char*)xmlNodeGetContent(curr->xmlChildrenNode)) + 1;
-    strncpy(temp_arr, (const char*)xmlNodeGetContent(curr->xmlChildrenNode),temp_size);
+    value = (char*)xmlNodeGetContent(curr->xmlChildrenNode);
+    temp_size = strlen(value) + 1;
+    strncpy(temp_arr, value, temp_size);
     string temp_str = temp_arr;
     time = temp_str;
+
+    xmlFreeDoc(pdoc);
     //std::istringstream in(temp_str);
     //in>>time;
 
@@ -178,6 +189,7 @@ using namespace std;
             PQclear(res);
             res = PQexec(conn, "ROLLBACK");
             PQclear(res);
+
             return response;
         }
 

@@ -112,7 +112,7 @@ sys_error(const int &err)
 time_t
 convert_time(const char *str)
 {
-    struct tm time;
+    struct tm time = {0};
 
     sscanf(str, "%d-%d-%d %d:%d:%d", 
             &time.tm_year, 

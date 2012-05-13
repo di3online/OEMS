@@ -181,7 +181,7 @@ getqid(const uid_t &userID, vector<string> &questionID, const pid_t &paperID,
     PQescapeString(cpid, paperID.c_str(), paperID.size());
 
     char sql[300];
-    snprintf(sql, sizeof(sql), "SELECT question_id FROM question where paper_id = '%s' ",cpid);
+    snprintf(sql, sizeof(sql), "SELECT question_id FROM question where paper_id = '%s' ORDER BY question_id",cpid);
     //Exec the SQL query
     PGresult *res = PQexec(conn, sql);
 
