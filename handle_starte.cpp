@@ -122,7 +122,7 @@ handle_STARTE(const string &rawtext)
         snprintf(sql_buf, sizeof(sql_buf), 
                 "SELECT * FROM student_exam WHERE user_id = '%s' AND paper_id IN ( "
                     "SELECT paper_id FROM paper WHERE exam_id = %s "
-                ")",
+                ") AND final_score IS NOT NULL ",
                 uid.c_str(), ceid);
 
         res_exam = PQexec(dbconn, sql_buf);
@@ -139,7 +139,7 @@ handle_STARTE(const string &rawtext)
             return ret;
         }
         
-        if (PQntuples(res_exam) > 1)
+        if (PQntuples(res_exam) >= 1)
         {
             err = PC_NOPERMISSION;
             ret = sys_error(err);

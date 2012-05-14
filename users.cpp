@@ -102,14 +102,28 @@ void PwdReset(const uid_t &ope,  const uid_t &resetID,int & err,PGconn *dbconn)
 
     string t = cuser;
     string blank = "";
-    string sql ="UPDATE users SET password = DEFAULT WHERE user_id ='"+t+"'";
+    
+    //Check if there is the user when reset the password.
+    //Updated By: Lai
+    string sql ="UPDATE users SET password = DEFAULT WHERE user_id ='"+t+"' RETURNING password";
 
     res = PQexec(dbconn, sql.c_str());
 
-    if (PQresultStatus(res) != PGRES_COMMAND_OK){
+    if (PQresultStatus(res) != PGRES_TUPLES_OK){
         /*ret = PQresStatus(PQresultStatus(res));
         cout<<ret;*/
         err = PC_DBERROR;
+
+        //Updated By:Lai
+        PQclear(res);
+        return ;
+    }
+
+    if (PQntuples(res) == 0)
+    {
+        err = PC_NOTFOUND;
+
+        PQclear(res);
         return ;
     }
 
